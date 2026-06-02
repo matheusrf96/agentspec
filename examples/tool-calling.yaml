@@ -1,0 +1,39 @@
+name: "Tool Calling Agent Eval"
+model: deepseek-v4-pro
+system_prompt: |
+  You are a financial assistant. You have access to tools for looking up
+  stock prices and financial data. Use them when asked about stocks.
+
+tests:
+  - name: "fetches stock price"
+    prompt: "What is Apple's current stock price?"
+    assertions:
+      - type: tool_called
+        tool_name: get_stock_price
+      - type: output_matches
+        pattern: '\$\d+\.?\d*'
+      - type: latency_under
+        max_seconds: 30
+
+  - name: "handles unknown symbol gracefully"
+    prompt: "What is the price of FAKE123?"
+    assertions:
+      - type: output_contains_any
+        values:
+          - "not found"
+          - "don't know"
+          - "can't find"
+          - "unavailable"
+          - "invalid"
+        match: any
+
+  - name: "provides financial metrics"
+    prompt: "What is Microsoft's P/E ratio?"
+    assertions:
+      - type: tool_called
+        tool_name: get_financial_metrics
+        args:
+          symbol: MSFT
+      - type: output_contains
+        value: "Microsoft"
+        case_sensitive: false
