@@ -1,0 +1,10 @@
+name: "Sample Eval"
+model: deepseek-v4-pro
+system_prompt: "You are a helpful assistant."
+
+tests:
+  - name: "says hello"
+    prompt: "Say hello"
+    assertions:
+      - type: output_contains
+        value: "hello"
