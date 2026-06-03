@@ -10,3 +10,4 @@
 - [MCP Servers](mcp-servers.md) — All 6 MCP servers with tool references
 - [Contributing](contributing.md) — Setup, testing, and PR workflow
 - [FAQ](faq.md) — Common questions and troubleshooting
+- [Roadmap](roadmap.md) — Planned features across all tiers

@@ -163,8 +163,4 @@ python -m pytest tests/ --cov=agentspec
 
 ## Roadmap
 
-- [ ] LangChain adapter (test agents built with LangChain)
-- [ ] Directory-based specs (run all specs in a directory)
-- [ ] HTML report output
-- [ ] Test fixture system (mock tools, pre-seed conversation history)
-- [ ] GitHub Actions integration (comment PRs with eval results)
+See the full [roadmap](docs/roadmap.md) in the docs for planned features across all tiers.
