@@ -19,6 +19,8 @@ agentspec = "agentspec.cli:main"
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "flake8>=7.0",
+    "flake8-pyproject>=1.2",
 ]
 langchain = [
     "langchain-core>=0.3",

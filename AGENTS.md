@@ -10,7 +10,8 @@ agentspec run examples/tool-calling.yaml  # run eval
 agentspec validate examples/tool-calling.yaml  # validate spec
 agentspec init --name "My Eval" > my-spec.yaml  # create spec
 python -m pytest tests/ -v       # run tests
-ruff check .                     # lint
+ruff check .                     # lint (ruff)
+flake8 agentspec/ tests/         # lint (flake8)
 ```
 
 ## Project Structure
@@ -59,8 +60,19 @@ Layers:
 - **Line length**: 100 chars (ruff config)
 - **Python**: 3.10+, strict typing
 - **Testing**: pytest with pytest-asyncio for async tests
-- **Linting**: ruff (E, F, W, I rules)
+- **Linting**: ruff + flake8 (E, F, W, I rules)
 - **No markdown files** in project root except AGENTS.md (RULE #0)
+
+## OpenCode Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `format-and-test` | Run ruff lint + pytest |
+| `flake8-check` | Run flake8 linting, explains common violations |
+| `pre-commit` | Set up pre-commit hooks with flake8 + ruff |
+| `review-gate` | Enforce flake8 patterns during code review |
+| `scaffold-mcp` | Scaffold a new MCP server |
+| `add-eval-spec` | Create a new evaluation spec from templates |
 
 ## MCP Servers (registered in .mcp.json)
 
@@ -89,5 +101,7 @@ Layers:
 | Command | Action |
 |---------|--------|
 | `python -m pytest tests/ -v` | Run all tests |
-| `ruff check .` | Lint |
+| `ruff check .` | Lint (ruff) |
+| `flake8 agentspec/ tests/` | Lint (flake8) |
+| `ruff check . && flake8 agentspec/ tests/` | Lint (both) |
 | `pip install -e ".[dev]"` | Install with dev deps |

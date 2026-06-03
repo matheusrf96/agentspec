@@ -10,6 +10,7 @@
       "python *": "allow",
       "pip *": "allow",
       "ruff *": "allow",
+      "flake8 *": "allow",
       "git *": "allow",
       "mkdir *": "allow",
       "ls": "allow",
@@ -30,7 +31,9 @@
       "docs/**/*.md": "allow",
       "AGENTS.md": "allow",
       "pyproject.toml": "allow",
-      ".mcp.json": "allow"
+      ".mcp.json": "allow",
+      ".opencode/skills/**/*.md": "allow",
+      ".flake8": "allow"
     },
     "read": "allow",
     "webfetch": "allow",
@@ -43,8 +46,12 @@
       "template": "python -m pytest tests/ -v --tb=short"
     },
     "lint": {
-      "description": "Run ruff linter",
-      "template": "ruff check ."
+      "description": "Run ruff + flake8 linters",
+      "template": "ruff check . && flake8 agentspec/ tests/"
+    },
+    "flake8": {
+      "description": "Run flake8 linter",
+      "template": "flake8 agentspec/ tests/"
     },
     "coverage": {
       "description": "Run tests with coverage",
