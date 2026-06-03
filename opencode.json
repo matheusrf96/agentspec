@@ -1,0 +1,136 @@
+{
+  "model": "opencode/deepseek-v4",
+  "instructions": "AGENTS.md",
+  "permissions": {
+    "bash": {
+      "allow": ["python", "pip", "ruff", "git", "mkdir", "ls", "cp", "mv", "rm"],
+      "block": ["rm -rf /", "sudo", "chmod", "chown"]
+    },
+    "edit": {
+      "allowGlob": [
+        "agentspec/**/*.py",
+        "tests/**/*.py",
+        "examples/**/*.yaml",
+        "docs/**/*.md",
+        "AGENTS.md",
+        "pyproject.toml",
+        ".mcp.json"
+      ]
+    },
+    "read": {
+      "allowGlob": ["**"]
+    },
+    "webfetch": {
+      "allow": true
+    },
+    "question": {
+      "allow": true
+    },
+    "todowrite": {
+      "allow": true
+    }
+  },
+  "commands": {
+    "test": {
+      "description": "Run all tests",
+      "template": "python -m pytest tests/ -v --tb=short"
+    },
+    "lint": {
+      "description": "Run ruff linter",
+      "template": "ruff check ."
+    },
+    "coverage": {
+      "description": "Run tests with coverage",
+      "template": "python -m pytest tests/ --cov=agentspec"
+    },
+    "validate": {
+      "description": "Validate a spec file",
+      "template": "agentspec validate {{spec_file}}"
+    }
+  },
+  "skills": {
+    "path": ".opencode/skills"
+  },
+  "subAgents": {
+    "spec-writer": {
+      "path": ".opencode/agents/spec-writer.md",
+      "description": "Specialist for writing and editing YAML evaluation specs",
+      "permissions": {
+        "edit": {
+          "allowGlob": ["examples/*.yaml", "agentspec/**/*.yaml"]
+        },
+        "bash": {
+          "allow": ["agentspec validate"]
+        }
+      }
+    },
+    "test-writer": {
+      "path": ".opencode/agents/test-writer.md",
+      "description": "Specialist for writing tests",
+      "permissions": {
+        "edit": {
+          "allowGlob": ["tests/**/*.py"]
+        },
+        "bash": {
+          "allow": ["python -m pytest"]
+        }
+      }
+    },
+    "code-reviewer": {
+      "path": ".opencode/agents/code-reviewer.md",
+      "description": "Strict code reviewer",
+      "permissions": {
+        "bash": {
+          "allow": ["git diff", "git log", "git show", "git status"]
+        }
+      }
+    },
+    "mcp-scaffolder": {
+      "path": ".opencode/agents/mcp-scaffolder.md",
+      "description": "Scaffolds new MCP servers",
+      "permissions": {
+        "edit": {
+          "allowGlob": ["agentspec/mcp/*.py", "tests/mcp/*.py", ".mcp.json"]
+        },
+        "bash": {
+          "allow": ["ruff check", "python -m pytest"]
+        }
+      }
+    },
+    "doc-writer": {
+      "path": ".opencode/agents/doc-writer.md",
+      "description": "Documentation writer",
+      "permissions": {
+        "edit": {
+          "allowGlob": ["docs/**/*.md", "AGENTS.md"]
+        }
+      }
+    }
+  },
+  "mcpServers": {
+    "spec-manager": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.spec_manager"]
+    },
+    "eval-runner": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.eval_runner"]
+    },
+    "results-store": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.results_store"]
+    },
+    "mock-agent": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.mock_agent"]
+    },
+    "spec-templates": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.spec_templates"]
+    },
+    "tests-runner": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.tests_runner"]
+    }
+  }
+}
