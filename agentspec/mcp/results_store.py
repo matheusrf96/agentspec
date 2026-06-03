@@ -114,11 +114,13 @@ def compare_runs(id1: str, id2: str) -> dict:
         status_before = _status(r1)
         status_after = _status(r2)
         if status_before != status_after:
-            differences.append({
-                "test_name": name,
-                "status_before": status_before,
-                "status_after": status_after,
-            })
+            differences.append(
+                {
+                    "test_name": name,
+                    "status_before": status_before,
+                    "status_after": status_after,
+                }
+            )
 
     return {
         "run1": {"run_id": id1, "timestamp": run1.get("timestamp")},
@@ -131,6 +133,7 @@ def compare_runs(id1: str, id2: str) -> dict:
 
 def get_trends(spec_name: str | None = None, days: int | None = None) -> dict:
     from datetime import timedelta
+
     index = _load_index()
     runs = index.get("runs", [])
 
@@ -139,14 +142,24 @@ def get_trends(spec_name: str | None = None, days: int | None = None) -> dict:
 
     if days is not None and days > 0:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        runs = [r for r in runs if _parse_iso(r.get("timestamp", "")) >= cutoff] if runs else []
+        runs = (
+            [r for r in runs if _parse_iso(r.get("timestamp", "")) >= cutoff]
+            if runs
+            else []
+        )
 
     periods: dict[str, dict] = {}
     for run in runs:
         ts = run.get("timestamp", "")
         day = ts[:10] if ts else "unknown"
         if day not in periods:
-            periods[day] = {"date": day, "total": 0, "passed": 0, "failed": 0, "errors": 0}
+            periods[day] = {
+                "date": day,
+                "total": 0,
+                "passed": 0,
+                "failed": 0,
+                "errors": 0,
+            }
         periods[day]["total"] += run.get("total", 0)
         periods[day]["passed"] += run.get("passed", 0)
         periods[day]["failed"] += run.get("failed", 0)
@@ -156,14 +169,16 @@ def get_trends(spec_name: str | None = None, days: int | None = None) -> dict:
     for day in sorted(periods):
         p = periods[day]
         pass_rate = p["passed"] / p["total"] if p["total"] > 0 else 0.0
-        trend_data.append({
-            "date": day,
-            "total": p["total"],
-            "passed": p["passed"],
-            "failed": p["failed"],
-            "errors": p["errors"],
-            "pass_rate": round(pass_rate, 4),
-        })
+        trend_data.append(
+            {
+                "date": day,
+                "total": p["total"],
+                "passed": p["passed"],
+                "failed": p["failed"],
+                "errors": p["errors"],
+                "pass_rate": round(pass_rate, 4),
+            }
+        )
 
     return {"trends": trend_data, "total_runs": len(runs)}
 
@@ -187,12 +202,16 @@ def _build_server() -> BaseMcpServer:
 
     srv.tool(
         "save_result",
-        description="Save an evaluation result to persistent storage. Returns a run_id.",
+        description="Save an evaluation result to persistent storage."
+        " Returns a run_id.",
         input_schema={
             "type": "object",
             "properties": {
                 "report": {"type": "object", "description": "Evaluation report dict"},
-                "spec_path": {"type": "string", "description": "Optional spec file path"},
+                "spec_path": {
+                    "type": "string",
+                    "description": "Optional spec file path",
+                },
             },
             "required": ["report"],
         },
@@ -200,11 +219,15 @@ def _build_server() -> BaseMcpServer:
 
     srv.tool(
         "list_runs",
-        description="List past evaluation runs, with optional limit and spec name filter",
+        description="List past evaluation runs, with optional limit"
+        " and spec name filter",
         input_schema={
             "type": "object",
             "properties": {
-                "limit": {"type": "integer", "description": "Maximum number of runs to return"},
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of runs to return",
+                },
                 "spec_name": {"type": "string", "description": "Filter by spec name"},
             },
         },
@@ -237,12 +260,16 @@ def _build_server() -> BaseMcpServer:
 
     srv.tool(
         "get_trends",
-        description="Get pass rate trends over time, optionally filtered by spec and time window",
+        description="Get pass rate trends over time, optionally"
+        " filtered by spec and time window",
         input_schema={
             "type": "object",
             "properties": {
                 "spec_name": {"type": "string", "description": "Filter by spec name"},
-                "days": {"type": "integer", "description": "Number of days of history to include"},
+                "days": {
+                    "type": "integer",
+                    "description": "Number of days of history to include",
+                },
             },
         },
     )(get_trends)
@@ -253,6 +280,7 @@ def _build_server() -> BaseMcpServer:
 
 def main() -> None:
     import asyncio
+
     server = _build_server()
     asyncio.run(server.run())
 

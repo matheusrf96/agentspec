@@ -62,9 +62,15 @@ class TestSetBehavior:
     def test_sets_behaviors_successfully(self):
         create_result = create_mock(name="behavior-test")
         agent_id = create_result["agent_id"]
-        result = set_behavior(agent_id, [
-            {"step": 0, "response": {"text": "Hello there!", "latency_seconds": 0.0}},
-        ])
+        result = set_behavior(
+            agent_id,
+            [
+                {
+                    "step": 0,
+                    "response": {"text": "Hello there!", "latency_seconds": 0.0},
+                },
+            ],
+        )
         assert result["ok"] is True
         assert result["behavior_count"] == 1
 
@@ -75,11 +81,14 @@ class TestSetBehavior:
     def test_set_multiple_behaviors(self):
         create_result = create_mock(name="multi-behavior")
         agent_id = create_result["agent_id"]
-        result = set_behavior(agent_id, [
-            {"step": 0, "response": {"text": "First"}},
-            {"step": 1, "response": {"text": "Second"}},
-            {"step": 2, "response": {"text": "Third"}},
-        ])
+        result = set_behavior(
+            agent_id,
+            [
+                {"step": 0, "response": {"text": "First"}},
+                {"step": 1, "response": {"text": "Second"}},
+                {"step": 2, "response": {"text": "Third"}},
+            ],
+        )
         assert result["ok"] is True
         assert result["behavior_count"] == 3
 
@@ -88,9 +97,15 @@ class TestRunWithMock:
     def test_basic_text_response(self):
         create_result = create_mock(name="basic-mock")
         agent_id = create_result["agent_id"]
-        set_behavior(agent_id, [
-            {"step": 0, "response": {"text": "Hello there!", "latency_seconds": 0.0}},
-        ])
+        set_behavior(
+            agent_id,
+            [
+                {
+                    "step": 0,
+                    "response": {"text": "Hello there!", "latency_seconds": 0.0},
+                },
+            ],
+        )
         spec_path = _write_spec(ALWAYS_PASS_SPEC)
         try:
             result = run_with_mock(spec_path, agent_id)
@@ -100,25 +115,31 @@ class TestRunWithMock:
             assert result["results"][0]["passed"] is True
         finally:
             import os
+
             os.unlink(spec_path)
 
     def test_multiple_tests(self):
         create_result = create_mock(name="multi-test-mock")
         agent_id = create_result["agent_id"]
-        set_behavior(agent_id, [
-            {"step": 0, "response": {"text": "First", "latency_seconds": 0.0}},
-            {"step": 1, "response": {"text": "Second", "latency_seconds": 0.0}},
-        ])
+        set_behavior(
+            agent_id,
+            [
+                {"step": 0, "response": {"text": "First", "latency_seconds": 0.0}},
+                {"step": 1, "response": {"text": "Second", "latency_seconds": 0.0}},
+            ],
+        )
         spec_data = {
             "name": "Multi Test",
             "model": "mock",
             "tests": [
                 {
-                    "name": "t1", "prompt": "hi",
+                    "name": "t1",
+                    "prompt": "hi",
                     "assertions": [{"type": "output_contains", "value": "First"}],
                 },
                 {
-                    "name": "t2", "prompt": "bye",
+                    "name": "t2",
+                    "prompt": "bye",
                     "assertions": [{"type": "output_contains", "value": "Second"}],
                 },
             ],
@@ -130,21 +151,27 @@ class TestRunWithMock:
             assert result["summary"]["passed"] == 2
         finally:
             import os
+
             os.unlink(spec_path)
 
     def test_tool_call_behavior(self):
         create_result = create_mock(name="tool-mock")
         agent_id = create_result["agent_id"]
-        set_behavior(agent_id, [
-            {
-                "step": 0,
-                "response": {
-                    "text": "The price is $150",
-                    "tool_calls": [{"name": "get_stock_price", "args": {"symbol": "AAPL"}}],
-                    "latency_seconds": 0.0,
+        set_behavior(
+            agent_id,
+            [
+                {
+                    "step": 0,
+                    "response": {
+                        "text": "The price is $150",
+                        "tool_calls": [
+                            {"name": "get_stock_price", "args": {"symbol": "AAPL"}}
+                        ],
+                        "latency_seconds": 0.0,
+                    },
                 },
-            },
-        ])
+            ],
+        )
         spec_data = {
             "name": "Tool Test",
             "model": "mock",
@@ -166,6 +193,7 @@ class TestRunWithMock:
             assert result["summary"]["total"] == 1
         finally:
             import os
+
             os.unlink(spec_path)
 
     def test_nonexistent_mock_returns_error(self):

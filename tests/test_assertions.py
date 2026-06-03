@@ -34,7 +34,9 @@ def test_tool_called_with_args_passes():
         text="",
         tool_calls=[ToolCall(name="get_stock_price", args='{"symbol": "AAPL"}')],
     )
-    assertion = ToolCalledAssertion(tool_name="get_stock_price", args={"symbol": "AAPL"})
+    assertion = ToolCalledAssertion(
+        tool_name="get_stock_price", args={"symbol": "AAPL"}
+    )
     result = evaluate_assertion(assertion, response)
     assert result.passed is True
 
@@ -44,7 +46,9 @@ def test_tool_called_with_args_mismatch():
         text="",
         tool_calls=[ToolCall(name="get_stock_price", args='{"symbol": "MSFT"}')],
     )
-    assertion = ToolCalledAssertion(tool_name="get_stock_price", args={"symbol": "AAPL"})
+    assertion = ToolCalledAssertion(
+        tool_name="get_stock_price", args={"symbol": "AAPL"}
+    )
     result = evaluate_assertion(assertion, response)
     assert result.passed is False
 
@@ -107,25 +111,29 @@ def test_latency_under_fails():
 
 def test_output_json_schema_passes():
     response = AgentResponse(text=json.dumps({"name": "test", "value": 42}))
-    assertion = OutputJsonSchemaAssertion(json_schema={
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-        },
-        "required": ["name"],
-    })
+    assertion = OutputJsonSchemaAssertion(
+        json_schema={
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+            },
+            "required": ["name"],
+        }
+    )
     result = evaluate_assertion(assertion, response)
     assert result.passed is True
 
 
 def test_output_json_schema_fails():
     response = AgentResponse(text=json.dumps({"name": 123}))
-    assertion = OutputJsonSchemaAssertion(json_schema={
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-        },
-        "required": ["name"],
-    })
+    assertion = OutputJsonSchemaAssertion(
+        json_schema={
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+            },
+            "required": ["name"],
+        }
+    )
     result = evaluate_assertion(assertion, response)
     assert result.passed is False

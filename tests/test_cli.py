@@ -23,8 +23,11 @@ def valid_spec_path():
         "model": "deepseek-v4-pro",
         "system_prompt": "You are a test assistant.",
         "tests": [
-            {"name": "test1", "prompt": "Hello",
-             "assertions": [{"type": "output_contains", "value": "hello"}]},
+            {
+                "name": "test1",
+                "prompt": "Hello",
+                "assertions": [{"type": "output_contains", "value": "hello"}],
+            },
         ],
     }
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -99,6 +102,7 @@ class TestInitCommand:
     def test_generated_yaml_is_parseable(self, runner):
         result = runner.invoke(main, ["init"])
         from agentspec.spec import Spec
+
         spec = Spec.from_yaml_string(result.output)
         assert spec.name == "My Agent Eval"
         assert len(spec.tests) == 1
@@ -106,26 +110,39 @@ class TestInitCommand:
 
 class TestRunCommand:
     @patch("agentspec.cli.os.getenv")
-    def test_run_with_api_key(self, mock_getenv, runner, valid_spec_path, mock_adapter_and_runner):
+    def test_run_with_api_key(
+        self, mock_getenv, runner, valid_spec_path, mock_adapter_and_runner
+    ):
         mock_getenv.return_value = "sk-test-key"
         result = runner.invoke(main, ["run", valid_spec_path])
         assert result.exit_code == 0
 
     @patch("agentspec.cli.os.getenv")
-    def test_run_with_flags(self, mock_getenv, runner, valid_spec_path, mock_adapter_and_runner):
+    def test_run_with_flags(
+        self, mock_getenv, runner, valid_spec_path, mock_adapter_and_runner
+    ):
         mock_getenv.return_value = "sk-test-key"
-        result = runner.invoke(main, [
-            "run", valid_spec_path,
-            "--model", "gpt-4",
-            "--base-url", "https://custom.api.com",
-            "--api-key", "sk-custom",
-            "--verbose",
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "run",
+                valid_spec_path,
+                "--model",
+                "gpt-4",
+                "--base-url",
+                "https://custom.api.com",
+                "--api-key",
+                "sk-custom",
+                "--verbose",
+            ],
+        )
         assert result.exit_code == 0
         mock_adapter_and_runner[0].assert_called_once()
 
     @patch("agentspec.cli.os.getenv")
-    def test_run_json_output(self, mock_getenv, runner, valid_spec_path, mock_adapter_and_runner):
+    def test_run_json_output(
+        self, mock_getenv, runner, valid_spec_path, mock_adapter_and_runner
+    ):
         mock_getenv.return_value = "sk-test-key"
         result = runner.invoke(main, ["run", valid_spec_path, "--output", "json"])
         assert result.exit_code == 0
@@ -136,7 +153,9 @@ class TestRunCommand:
         assert "does not exist" in result.output
 
     @patch("agentspec.cli.os.getenv")
-    def test_run_handles_spec_parse_error(self, mock_getenv, runner, mock_adapter_and_runner):
+    def test_run_handles_spec_parse_error(
+        self, mock_getenv, runner, mock_adapter_and_runner
+    ):
         mock_getenv.return_value = "sk-test-key"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write("broken: [yaml:")

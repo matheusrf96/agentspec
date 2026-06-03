@@ -92,7 +92,9 @@ class BaseMcpServer:
     def _send_result(self, msg_id: int | str, result: Any) -> None:
         send_message({"jsonrpc": "2.0", "id": msg_id, "result": result})
 
-    def _send_error(self, msg_id: int | str, code: int, message: str, data: Any = None) -> None:
+    def _send_error(
+        self, msg_id: int | str, code: int, message: str, data: Any = None
+    ) -> None:
         err: dict[str, Any] = {"code": code, "message": message}
         if data is not None:
             err["data"] = data
@@ -114,11 +116,17 @@ class BaseMcpServer:
             if method == "initialize":
                 params = msg.get("params", {})
                 client_version = params.get("protocolVersion", "2025-03-26")
-                self._send_result(msg_id, {
-                    "protocolVersion": client_version,
-                    "capabilities": self._capabilities(),
-                    "serverInfo": {"name": self.server_name, "version": self.server_version},
-                })
+                self._send_result(
+                    msg_id,
+                    {
+                        "protocolVersion": client_version,
+                        "capabilities": self._capabilities(),
+                        "serverInfo": {
+                            "name": self.server_name,
+                            "version": self.server_version,
+                        },
+                    },
+                )
             elif method == "ping":
                 self._send_result(msg_id, {})
             elif method == "tools/list":
@@ -135,9 +143,12 @@ class BaseMcpServer:
                 else:
                     result = handler(**arguments)
                 text = json.dumps(result, ensure_ascii=False, default=str)
-                self._send_result(msg_id, {
-                    "content": [{"type": "text", "text": text}],
-                })
+                self._send_result(
+                    msg_id,
+                    {
+                        "content": [{"type": "text", "text": text}],
+                    },
+                )
             else:
                 self._send_error(msg_id, -32601, f"Method not found: {method}")
         except Exception as exc:

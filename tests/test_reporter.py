@@ -75,10 +75,15 @@ class TestJSONOutput:
 
     def test_json_with_assertion_details(self, capsys):
         results = [
-            _result("test1", True, latency=0.5, assertions=[
-                ("check1", True, "ok"),
-                ("check2", True, "ok"),
-            ]),
+            _result(
+                "test1",
+                True,
+                latency=0.5,
+                assertions=[
+                    ("check1", True, "ok"),
+                    ("check2", True, "ok"),
+                ],
+            ),
         ]
         report = _report(results)
         reporter = Reporter(ReportConfig(output_json=True))
@@ -137,10 +142,14 @@ class TestTerminalOutput:
 
     def test_verbose_shows_assertions(self, capsys):
         results = [
-            _result("t1", True, assertions=[
-                ("c1", True, "ok"),
-                ("c2", True, "ok"),
-            ]),
+            _result(
+                "t1",
+                True,
+                assertions=[
+                    ("c1", True, "ok"),
+                    ("c2", True, "ok"),
+                ],
+            ),
         ]
         report = _report(results)
         reporter = Reporter(ReportConfig(verbose=True))
@@ -151,9 +160,13 @@ class TestTerminalOutput:
 
     def test_verbose_shows_failed_assertion_reason(self, capsys):
         results = [
-            _result("t1", False, assertions=[
-                ("c1", False, "Value mismatch"),
-            ]),
+            _result(
+                "t1",
+                False,
+                assertions=[
+                    ("c1", False, "Value mismatch"),
+                ],
+            ),
         ]
         report = _report(results)
         reporter = Reporter(ReportConfig(verbose=True))
@@ -163,9 +176,13 @@ class TestTerminalOutput:
 
     def test_non_verbose_hides_assertions(self, capsys):
         results = [
-            _result("t1", True, assertions=[
-                ("c1", True, "ok"),
-            ]),
+            _result(
+                "t1",
+                True,
+                assertions=[
+                    ("c1", True, "ok"),
+                ],
+            ),
         ]
         report = _report(results)
         reporter = Reporter()
@@ -174,11 +191,13 @@ class TestTerminalOutput:
         assert "c1" not in out
 
     def test_summary_shows_pass_rate(self, capsys):
-        report = _report([
-            _result("t1", True),
-            _result("t2", True),
-            _result("t3", False),
-        ])
+        report = _report(
+            [
+                _result("t1", True),
+                _result("t2", True),
+                _result("t3", False),
+            ]
+        )
         reporter = Reporter()
         reporter.render(report)
         out, _ = capsys.readouterr()
@@ -186,10 +205,12 @@ class TestTerminalOutput:
         assert "2/3" in out
 
     def test_summary_shows_avg_latency(self, capsys):
-        report = _report([
-            _result("t1", True, latency=1.0),
-            _result("t2", True, latency=3.0),
-        ])
+        report = _report(
+            [
+                _result("t1", True, latency=1.0),
+                _result("t2", True, latency=3.0),
+            ]
+        )
         reporter = Reporter()
         reporter.render(report)
         out, _ = capsys.readouterr()
@@ -205,11 +226,13 @@ class TestEdgeCases:
         assert "0 test(s)" in out
 
     def test_all_pass(self, capsys):
-        report = _report([
-            _result("t1", True),
-            _result("t2", True),
-            _result("t3", True),
-        ])
+        report = _report(
+            [
+                _result("t1", True),
+                _result("t2", True),
+                _result("t3", True),
+            ]
+        )
         reporter = Reporter()
         reporter.render(report)
         out, _ = capsys.readouterr()
@@ -217,10 +240,12 @@ class TestEdgeCases:
         assert "100%" in out
 
     def test_all_fail(self, capsys):
-        report = _report([
-            _result("t1", False),
-            _result("t2", False),
-        ])
+        report = _report(
+            [
+                _result("t1", False),
+                _result("t2", False),
+            ]
+        )
         reporter = Reporter()
         reporter.render(report)
         out, _ = capsys.readouterr()
@@ -228,11 +253,13 @@ class TestEdgeCases:
         assert "0%" in out
 
     def test_mixed_results(self, capsys):
-        report = _report([
-            _result("pass", True),
-            _result("fail", False),
-            _result("error", False, error="oops"),
-        ])
+        report = _report(
+            [
+                _result("pass", True),
+                _result("fail", False),
+                _result("error", False, error="oops"),
+            ]
+        )
         reporter = Reporter()
         reporter.render(report)
         out, _ = capsys.readouterr()

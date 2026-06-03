@@ -15,7 +15,9 @@ DEFAULT_MODEL = "deepseek-v4-pro"
 @dataclass
 class AdapterConfig:
     api_key: str = field(default_factory=lambda: os.getenv("DEEPSEEK_API_KEY", ""))
-    base_url: str = field(default_factory=lambda: os.getenv("LLM_BASE_URL", DEFAULT_BASE_URL))
+    base_url: str = field(
+        default_factory=lambda: os.getenv("LLM_BASE_URL", DEFAULT_BASE_URL)
+    )
     model: str = DEFAULT_MODEL
     max_tokens: int = 4096
     temperature: float = 0.0
@@ -59,10 +61,12 @@ class OpenAICompatibleAdapter(AgentAdapter):
         tool_calls = []
         if choice.message.tool_calls:
             for tc in choice.message.tool_calls:
-                tool_calls.append(ToolCall(
-                    name=tc.function.name,
-                    args=tc.function.arguments,
-                ))
+                tool_calls.append(
+                    ToolCall(
+                        name=tc.function.name,
+                        args=tc.function.arguments,
+                    )
+                )
 
         token_usage = None
         if response.usage:

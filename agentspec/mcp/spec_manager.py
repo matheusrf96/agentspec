@@ -10,7 +10,8 @@ from agentspec.spec import Spec
 TOOL_DESCRIPTIONS: dict[str, str] = {
     "list_specs": "List spec files in a directory (default: current working directory)",
     "read_spec": "Parse and return a spec file as a structured JSON object",
-    "validate_spec": "Validate a spec file without running it, returns valid flag and any errors",
+    "validate_spec": "Validate a spec file without running it, "
+                     "returns valid flag and any errors",
     "create_spec": "Generate a new spec YAML file with the given name and model",
     "add_test": "Add a test case to an existing spec file",
     "add_assertion": "Add an assertion to a test case within a spec file",
@@ -22,7 +23,10 @@ INPUT_SCHEMAS: dict[str, dict] = {
     "list_specs": {
         "type": "object",
         "properties": {
-            "path": {"type": "string", "description": "Directory to scan for spec files"},
+            "path": {
+                "type": "string",
+                "description": "Directory to scan for spec files",
+            },
         },
     },
     "read_spec": {
@@ -44,8 +48,14 @@ INPUT_SCHEMAS: dict[str, dict] = {
         "properties": {
             "name": {"type": "string", "description": "Spec name"},
             "output": {"type": "string", "description": "Output file path"},
-            "model": {"type": "string", "description": "Model name (default: deepseek-v4-pro)"},
-            "system_prompt": {"type": "string", "description": "System prompt for the agent"},
+            "model": {
+                "type": "string",
+                "description": "Model name (default: deepseek-v4-pro)",
+            },
+            "system_prompt": {
+                "type": "string",
+                "description": "System prompt for the agent",
+            },
         },
         "required": ["name", "output"],
     },
@@ -65,15 +75,25 @@ INPUT_SCHEMAS: dict[str, dict] = {
             "test_name": {"type": "string", "description": "Name of the test case"},
             "type": {"type": "string", "description": "Assertion type"},
             "tool_name": {"type": "string", "description": "Tool name (tool_called)"},
-            "value": {"type": "string", "description": "Expected value (output_contains)"},
+            "value": {
+                "type": "string",
+                "description": "Expected value (output_contains)",
+            },
             "pattern": {"type": "string", "description": "Regex (output_matches)"},
-            "max_seconds": {"type": "number", "description": "Max latency (latency_under)"},
+            "max_seconds": {
+                "type": "number",
+                "description": "Max latency (latency_under)",
+            },
             "values": {
-                "type": "array", "items": {"type": "string"},
+                "type": "array",
+                "items": {"type": "string"},
                 "description": "Expected values (output_contains_any)",
             },
             "match": {"type": "string", "description": "Match mode: any|all"},
-            "schema": {"type": "object", "description": "JSON Schema (output_json_schema)"},
+            "schema": {
+                "type": "object",
+                "description": "JSON Schema (output_json_schema)",
+            },
             "case_sensitive": {"type": "boolean", "description": "Case sensitive"},
         },
         "required": ["spec_path", "test_name", "type"],
@@ -82,7 +102,10 @@ INPUT_SCHEMAS: dict[str, dict] = {
         "type": "object",
         "properties": {
             "spec_path": {"type": "string", "description": "Path to the spec file"},
-            "test_name": {"type": "string", "description": "Name of the test case to remove"},
+            "test_name": {
+                "type": "string",
+                "description": "Name of the test case to remove",
+            },
         },
         "required": ["spec_path", "test_name"],
     },
@@ -105,7 +128,9 @@ def _read_spec_raw(path: str) -> dict:
 
 def _write_spec_raw(path: str, data: dict) -> None:
     with open(path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        yaml.dump(
+            data, f, default_flow_style=False, sort_keys=False, allow_unicode=True
+        )
 
 
 def list_specs(path: str | None = None) -> dict:
@@ -118,17 +143,21 @@ def list_specs(path: str | None = None) -> dict:
             fpath = os.path.join(search_path, fname)
             try:
                 spec = Spec.from_yaml(fpath)
-                specs.append({
-                    "path": os.path.abspath(fpath),
-                    "name": spec.name,
-                    "test_count": len(spec.tests),
-                })
+                specs.append(
+                    {
+                        "path": os.path.abspath(fpath),
+                        "name": spec.name,
+                        "test_count": len(spec.tests),
+                    }
+                )
             except Exception:
-                specs.append({
-                    "path": os.path.abspath(fpath),
-                    "name": fname,
-                    "test_count": 0,
-                })
+                specs.append(
+                    {
+                        "path": os.path.abspath(fpath),
+                        "name": fname,
+                        "test_count": 0,
+                    }
+                )
     return {"specs": specs}
 
 
@@ -261,8 +290,16 @@ def _build_server() -> BaseMcpServer:
 
     srv = BaseMcpServer("spec-manager")
 
-    for name in ("list_specs", "read_spec", "validate_spec", "create_spec",
-                  "add_test", "add_assertion", "remove_test", "remove_assertion"):
+    for name in (
+        "list_specs",
+        "read_spec",
+        "validate_spec",
+        "create_spec",
+        "add_test",
+        "add_assertion",
+        "remove_test",
+        "remove_assertion",
+    ):
         desc = TOOL_DESCRIPTIONS.get(name, "")
         schema = INPUT_SCHEMAS.get(name, {"type": "object", "properties": {}})
         func = globals()[name]
@@ -274,6 +311,7 @@ def _build_server() -> BaseMcpServer:
 
 def main() -> None:
     import asyncio
+
     server = _build_server()
     asyncio.run(server.run())
 

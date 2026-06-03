@@ -57,7 +57,7 @@ Layers:
 
 ## Key Conventions
 
-- **Line length**: 100 chars (ruff config)
+- **Line length**: 88 chars (ruff + flake8 config)
 - **Python**: 3.10+, strict typing
 - **Testing**: pytest with pytest-asyncio for async tests
 - **Linting**: ruff + flake8 (E, F, W, I rules)

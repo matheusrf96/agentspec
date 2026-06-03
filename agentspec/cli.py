@@ -24,9 +24,7 @@ def _run_spec(spec_path, model, base_url, api_key):
     spec = Spec.from_yaml(spec_path)
     config = AdapterConfig(
         api_key=api_key or os.getenv("DEEPSEEK_API_KEY", ""),
-        base_url=base_url or os.getenv(
-            "LLM_BASE_URL", "https://api.deepseek.com"
-        ),
+        base_url=base_url or os.getenv("LLM_BASE_URL", "https://api.deepseek.com"),
         model=model or spec.model,
     )
     adapter = OpenAICompatibleAdapter(config)
@@ -43,7 +41,8 @@ def _run_spec(spec_path, model, base_url, api_key):
 )
 @click.option("--verbose", "-v", is_flag=True, help="Show assertion details")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Choice(["terminal", "json"]),
     default="terminal",
 )
@@ -56,13 +55,10 @@ def run(spec_path, model, base_url, api_key, verbose, output):
     async def _run_all():
         if os.path.isdir(spec_path):
             yaml_files = sorted(
-                f for f in os.listdir(spec_path)
-                if f.endswith((".yaml", ".yml"))
+                f for f in os.listdir(spec_path) if f.endswith((".yaml", ".yml"))
             )
             if not yaml_files:
-                click.echo(
-                    f"No .yaml files found in {spec_path}", err=True
-                )
+                click.echo(f"No .yaml files found in {spec_path}", err=True)
                 raise click.Abort()
 
             reports = []
@@ -75,9 +71,7 @@ def run(spec_path, model, base_url, api_key, verbose, output):
             return await _run_single(spec_path)
 
     report = asyncio.run(_run_all())
-    reporter = Reporter(
-        ReportConfig(verbose=verbose, output_json=(output == "json"))
-    )
+    reporter = Reporter(ReportConfig(verbose=verbose, output_json=(output == "json")))
     reporter.render(report)
 
 
@@ -87,10 +81,7 @@ def validate(spec_file):
     """Validate a spec file without running it."""
     try:
         spec = Spec.from_yaml(spec_file)
-        click.echo(
-            f"OK Spec '{spec.name}' is valid "
-            f"({len(spec.tests)} test(s))"
-        )
+        click.echo(f"OK Spec '{spec.name}' is valid ({len(spec.tests)} test(s))")
     except Exception as e:
         click.echo(f"FAIL Invalid spec: {e}", err=True)
         raise click.Abort()
@@ -98,9 +89,7 @@ def validate(spec_file):
 
 @main.command()
 @click.option("--name", default="My Agent Eval", help="Spec name")
-@click.option(
-    "--model", default="deepseek-v4-pro", help="Default model"
-)
+@click.option("--model", default="deepseek-v4-pro", help="Default model")
 def init(name, model):
     """Generate a template spec.yaml file."""
     template = (

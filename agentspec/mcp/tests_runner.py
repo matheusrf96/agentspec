@@ -59,16 +59,19 @@ def _parse_pytest_summary(output: str) -> dict:
         line = line.strip()
         if " passed" in line or "passed " in line:
             import re
+
             m = re.search(r"(\d+)\s+passed", line)
             if m:
                 passed = int(m.group(1))
         if " failed" in line:
             import re
+
             m = re.search(r"(\d+)\s+failed", line)
             if m:
                 failed = int(m.group(1))
         if " error" in line:
             import re
+
             m = re.search(r"(\d+)\s+error", line)
             if m:
                 errors = int(m.group(1))
@@ -108,7 +111,8 @@ def _build_server() -> BaseMcpServer:
 
     srv.tool(
         "run_pytest",
-        description="Run pytest on the agentspec project with optional path and marker filters",
+        description=("Run pytest on the agentspec project"
+                     " with optional path and marker filters"),
         input_schema={
             "type": "object",
             "properties": {
@@ -125,7 +129,10 @@ def _build_server() -> BaseMcpServer:
         input_schema={
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Path to lint (default: project root)"},
+                "path": {
+                    "type": "string",
+                    "description": "Path to lint (default: project root)",
+                },
             },
         },
     )(run_ruff)
@@ -147,6 +154,7 @@ def _build_server() -> BaseMcpServer:
 
 def main() -> None:
     import asyncio
+
     server = _build_server()
     asyncio.run(server.run())
 

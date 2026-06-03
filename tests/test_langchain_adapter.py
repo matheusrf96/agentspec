@@ -58,10 +58,14 @@ class TestToolCalls:
     async def test_extracts_tool_calls(self, mock_runnable):
         msg = _make_msg(
             content="",
-            tool_calls=[{"name": "get_weather",
-            "args": {"city": "London"},
-            "id": "1",
-            "type": "tool_call"}],
+            tool_calls=[
+                {
+                    "name": "get_weather",
+                    "args": {"city": "London"},
+                    "id": "1",
+                    "type": "tool_call",
+                }
+            ],
         )
         mock_runnable.ainvoke.return_value = msg
         adapter = LangChainAdapter(mock_runnable)
@@ -74,8 +78,18 @@ class TestToolCalls:
         msg = _make_msg(
             content="",
             tool_calls=[
-                {"name": "search", "args": {"q": "weather"}, "id": "1", "type": "tool_call"},
-                {"name": "calculate", "args": {"expr": "1+1"}, "id": "2", "type": "tool_call"},
+                {
+                    "name": "search",
+                    "args": {"q": "weather"},
+                    "id": "1",
+                    "type": "tool_call",
+                },
+                {
+                    "name": "calculate",
+                    "args": {"expr": "1+1"},
+                    "id": "2",
+                    "type": "tool_call",
+                },
             ],
         )
         mock_runnable.ainvoke.return_value = msg

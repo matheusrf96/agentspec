@@ -38,17 +38,11 @@ class Reporter:
             self._render_consolidated(report)
         else:
             if self.config.output_json:
-                print(
-                    json.dumps(
-                        self._to_dict(report), indent=2, ensure_ascii=False
-                    )
-                )
+                print(json.dumps(self._to_dict(report), indent=2, ensure_ascii=False))
                 return
             self._render_terminal(report)
 
-    def _render_consolidated(
-        self, report: ConsolidatedReport
-    ) -> None:
+    def _render_consolidated(self, report: ConsolidatedReport) -> None:
         self.console.print(
             f"\n[bold cyan]Consolidated Report "
             f"({len(report.specs)} spec(s))[/bold cyan]\n"
@@ -75,9 +69,7 @@ class Reporter:
         self.console.print()
         self._render_summary(report)
 
-    def _render_test_case(
-        self, result: TestCaseResult
-    ) -> None:
+    def _render_test_case(self, result: TestCaseResult) -> None:
         if result.error:
             icon = "[bold red]💥[/bold red]"
             label = "ERROR"
@@ -101,13 +93,9 @@ class Reporter:
                 if ar.passed:
                     self.console.print(f"     [dim]✓ {ar.name}[/dim]")
                 else:
-                    self.console.print(
-                        f"     [red]✗ {ar.name}: {ar.reason}[/red]"
-                    )
+                    self.console.print(f"     [red]✗ {ar.name}: {ar.reason}[/red]")
 
-    def _render_summary(
-        self, report: TestReport | ConsolidatedReport
-    ) -> None:
+    def _render_summary(self, report: TestReport | ConsolidatedReport) -> None:
         summary = report.summary
 
         table = Table(show_header=False, box=None)
@@ -116,9 +104,7 @@ class Reporter:
 
         pass_rate = summary.pass_rate * 100
         pass_color = (
-            "green" if pass_rate >= 80 else (
-                "yellow" if pass_rate >= 50 else "red"
-            )
+            "green" if pass_rate >= 80 else ("yellow" if pass_rate >= 50 else "red")
         )
 
         table.add_row(
@@ -141,9 +127,7 @@ class Reporter:
                 {
                     "name": r.name,
                     "status": (
-                        "error" if r.error else (
-                            "pass" if r.passed else "fail"
-                        )
+                        "error" if r.error else ("pass" if r.passed else "fail")
                     ),
                     "latency_seconds": r.latency_seconds,
                     "error": r.error,
@@ -169,9 +153,7 @@ class Reporter:
             },
         }
 
-    def _consolidated_to_dict(
-        self, report: ConsolidatedReport
-    ) -> dict:
+    def _consolidated_to_dict(self, report: ConsolidatedReport) -> dict:
         return {
             "consolidated": True,
             "spec_count": len(report.specs),

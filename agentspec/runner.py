@@ -36,9 +36,7 @@ class TestRunner:
                 error=f"{type(e).__name__}: {e}\n{traceback.format_exc()}",
             )
 
-        assertion_results = [
-            evaluate_assertion(a, response) for a in test.assertions
-        ]
+        assertion_results = [evaluate_assertion(a, response) for a in test.assertions]
 
         all_passed = all(ar.passed for ar in assertion_results)
 

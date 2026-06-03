@@ -108,7 +108,10 @@ def _build_server() -> BaseMcpServer:
         input_schema={
             "type": "object",
             "properties": {
-                "spec_path": {"type": "string", "description": "Path to the spec YAML file"},
+                "spec_path": {
+                    "type": "string",
+                    "description": "Path to the spec YAML file",
+                },
                 "model": {"type": "string", "description": "Override model name"},
                 "base_url": {"type": "string", "description": "Override API base URL"},
                 "api_key": {"type": "string", "description": "Override API key"},
@@ -123,8 +126,14 @@ def _build_server() -> BaseMcpServer:
         input_schema={
             "type": "object",
             "properties": {
-                "spec_path": {"type": "string", "description": "Path to the spec YAML file"},
-                "test_name": {"type": "string", "description": "Name of the test case to run"},
+                "spec_path": {
+                    "type": "string",
+                    "description": "Path to the spec YAML file",
+                },
+                "test_name": {
+                    "type": "string",
+                    "description": "Name of the test case to run",
+                },
                 "model": {"type": "string", "description": "Override model name"},
                 "base_url": {"type": "string", "description": "Override API base URL"},
                 "api_key": {"type": "string", "description": "Override API key"},

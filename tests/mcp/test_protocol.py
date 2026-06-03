@@ -50,7 +50,10 @@ def test_receive_message_returns_none_on_empty_input():
 
 
 def test_receive_message_handles_multiple_headers():
-    data = 'Content-Length: 27\r\nContent-Type: application/json\r\n\r\n{"jsonrpc": "2.0", "id": 2}'
+    data = (
+        'Content-Length: 27\r\nContent-Type: application/json\r\n\r\n'
+        '{"jsonrpc": "2.0", "id": 2}'
+    )
     with patch("sys.stdin", StringIO(data)):
         msg = receive_message()
     assert msg is not None
@@ -65,7 +68,6 @@ def test_receive_message_skips_empty_first_line():
 
 
 class TestBaseMcpServer:
-
     @pytest.fixture
     def server(self):
         srv = BaseMcpServer("test-server", "0.1.0")
@@ -73,11 +75,17 @@ class TestBaseMcpServer:
 
     @pytest.fixture
     def server_with_tool(self, server):
-        @server.tool("hello", description="Says hello", input_schema={
-            "type": "object", "properties": {"name": {"type": "string"}},
-        })
+        @server.tool(
+            "hello",
+            description="Says hello",
+            input_schema={
+                "type": "object",
+                "properties": {"name": {"type": "string"}},
+            },
+        )
         def hello(name: str = "world") -> dict:
             return {"greeting": f"Hello, {name}!"}
+
         return server
 
     @pytest.fixture
@@ -89,6 +97,7 @@ class TestBaseMcpServer:
         @server.tool("my_tool")
         def my_tool() -> dict:
             return {"ok": True}
+
         assert "my_tool" in server._tools
         assert "my_tool" in server._handlers
 
@@ -96,6 +105,7 @@ class TestBaseMcpServer:
         @server.tool("add")
         def add(a: int = 0, b: int = 0) -> int:
             return a + b
+
         assert add(2, 3) == 5
 
     @pytest.mark.asyncio
@@ -118,7 +128,9 @@ class TestBaseMcpServer:
 
     @pytest.mark.asyncio
     async def test_dispatch_tools_list(self, server_with_tool, capsys_clean):
-        await server_with_tool._dispatch({"id": 3, "method": "tools/list", "params": {}})
+        await server_with_tool._dispatch(
+            {"id": 3, "method": "tools/list", "params": {}}
+        )
         out, _ = capsys_clean.readouterr()
         msg = json.loads(out.split("\r\n\r\n", 1)[1])
         assert msg["id"] == 3
@@ -128,10 +140,13 @@ class TestBaseMcpServer:
 
     @pytest.mark.asyncio
     async def test_dispatch_tools_call(self, server_with_tool, capsys_clean):
-        await server_with_tool._dispatch({
-            "id": 4, "method": "tools/call",
-            "params": {"name": "hello", "arguments": {"name": "Alice"}},
-        })
+        await server_with_tool._dispatch(
+            {
+                "id": 4,
+                "method": "tools/call",
+                "params": {"name": "hello", "arguments": {"name": "Alice"}},
+            }
+        )
         out, _ = capsys_clean.readouterr()
         msg = json.loads(out.split("\r\n\r\n", 1)[1])
         assert msg["id"] == 4
@@ -140,10 +155,13 @@ class TestBaseMcpServer:
 
     @pytest.mark.asyncio
     async def test_dispatch_unknown_tool_returns_error(self, server, capsys_clean):
-        await server._dispatch({
-            "id": 5, "method": "tools/call",
-            "params": {"name": "nonexistent", "arguments": {}},
-        })
+        await server._dispatch(
+            {
+                "id": 5,
+                "method": "tools/call",
+                "params": {"name": "nonexistent", "arguments": {}},
+            }
+        )
         out, _ = capsys_clean.readouterr()
         msg = json.loads(out.split("\r\n\r\n", 1)[1])
         assert "error" in msg
@@ -169,10 +187,13 @@ class TestBaseMcpServer:
         def crash() -> dict:
             raise ValueError("boom")
 
-        await server._dispatch({
-            "id": 7, "method": "tools/call",
-            "params": {"name": "crash", "arguments": {}},
-        })
+        await server._dispatch(
+            {
+                "id": 7,
+                "method": "tools/call",
+                "params": {"name": "crash", "arguments": {}},
+            }
+        )
         out, _ = capsys_clean.readouterr()
         msg = json.loads(out.split("\r\n\r\n", 1)[1])
         assert "error" in msg
@@ -185,10 +206,13 @@ class TestBaseMcpServer:
             await asyncio.sleep(0.01)
             return {"greeting": f"Hi, {name}!"}
 
-        await server._dispatch({
-            "id": 8, "method": "tools/call",
-            "params": {"name": "async_hello", "arguments": {"name": "Bob"}},
-        })
+        await server._dispatch(
+            {
+                "id": 8,
+                "method": "tools/call",
+                "params": {"name": "async_hello", "arguments": {"name": "Bob"}},
+            }
+        )
         out, _ = capsys_clean.readouterr()
         msg = json.loads(out.split("\r\n\r\n", 1)[1])
         content = json.loads(msg["result"]["content"][0]["text"])
@@ -209,6 +233,7 @@ class TestBaseMcpServer:
         @server.tool("func1")
         def func1():
             return {"ok": True}
+
         assert server._tools["func1"]["name"] == "func1"
 
     def test_capabilities_includes_tools(self, server):

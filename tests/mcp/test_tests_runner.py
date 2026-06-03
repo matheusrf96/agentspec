@@ -28,6 +28,7 @@ class TestRunCmd:
     @patch("agentspec.mcp.tests_runner.subprocess.run")
     def test_handles_timeout(self, mock_run):
         from subprocess import TimeoutExpired
+
         mock_run.side_effect = TimeoutExpired("cmd", 120)
 
         result = _run_cmd(["sleep", "999"])
@@ -125,7 +126,11 @@ class TestRunPytest:
 
     @patch("agentspec.mcp.tests_runner._run_cmd")
     def test_parses_summary(self, mock_run_cmd):
-        mock_run_cmd.return_value = {"exit_code": 1, "stdout": "5 passed, 2 failed", "stderr": ""}
+        mock_run_cmd.return_value = {
+            "exit_code": 1,
+            "stdout": "5 passed, 2 failed",
+            "stderr": "",
+        }
         result = run_pytest()
         assert result["passed"] == 5
         assert result["failed"] == 2
@@ -141,7 +146,11 @@ class TestRunRuff:
 
     @patch("agentspec.mcp.tests_runner._run_cmd")
     def test_failed_when_exit_code_nonzero(self, mock_run_cmd):
-        mock_run_cmd.return_value = {"exit_code": 1, "stdout": "issues found", "stderr": ""}
+        mock_run_cmd.return_value = {
+            "exit_code": 1,
+            "stdout": "issues found",
+            "stderr": "",
+        }
         result = run_ruff()
         assert result["passed"] is False
         assert result["exit_code"] == 1
@@ -162,8 +171,11 @@ class TestRunAll:
     def test_runs_both_and_returns_combined(self, mock_pytest, mock_ruff):
         mock_ruff.return_value = {"exit_code": 0, "passed": True, "output": ""}
         mock_pytest.return_value = {
-            "exit_code": 0, "passed": 5, "failed": 0,
-            "errors": 0, "output": "",
+            "exit_code": 0,
+            "passed": 5,
+            "failed": 0,
+            "errors": 0,
+            "output": "",
         }
 
         result = run_all()

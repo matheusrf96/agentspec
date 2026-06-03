@@ -84,11 +84,7 @@ class ConsolidatedReport:
         total_cases = sum(len(r.results) for r in self.specs)
         if total_cases == 0:
             return 0.0
-        total = sum(
-            result.latency_seconds
-            for r in self.specs
-            for result in r.results
-        )
+        total = sum(result.latency_seconds for r in self.specs for result in r.results)
         return total / total_cases
 
     @property

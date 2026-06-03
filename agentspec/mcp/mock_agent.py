@@ -51,6 +51,7 @@ class MockAdapter(AgentAdapter):
                         continue
                 if prompt_match:
                     import re
+
                     if not re.search(prompt_match, prompt):
                         continue
 
@@ -75,7 +76,11 @@ class MockAdapter(AgentAdapter):
                 text=resp_data.get("text", ""),
                 tool_calls=tool_calls,
                 latency_seconds=latency,
-                token_usage={"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+                token_usage={
+                    "prompt_tokens": 10,
+                    "completion_tokens": 20,
+                    "total_tokens": 30,
+                },
             )
 
         return AgentResponse(text="", latency_seconds=0.0)
@@ -114,29 +119,34 @@ def run_with_mock(spec_path: str, agent_id: str) -> dict:
         return {"error": f"Failed to parse spec: {exc}"}
     runner = TestRunner(spec, adapter)
     report = asyncio.run(runner.run_all())
-    return json.loads(json.dumps({
-        "spec_name": report.spec_name,
-        "summary": {
-            "total": report.summary.total,
-            "passed": report.summary.passed,
-            "failed": report.summary.failed,
-            "errors": report.summary.errors,
-            "pass_rate": report.summary.pass_rate,
-        },
-        "results": [
+    return json.loads(
+        json.dumps(
             {
-                "name": r.name,
-                "passed": r.passed,
-                "error": r.error,
-                "latency_seconds": r.latency_seconds,
-                "assertion_results": [
-                    {"name": a.name, "passed": a.passed, "reason": a.reason}
-                    for a in r.assertion_results
+                "spec_name": report.spec_name,
+                "summary": {
+                    "total": report.summary.total,
+                    "passed": report.summary.passed,
+                    "failed": report.summary.failed,
+                    "errors": report.summary.errors,
+                    "pass_rate": report.summary.pass_rate,
+                },
+                "results": [
+                    {
+                        "name": r.name,
+                        "passed": r.passed,
+                        "error": r.error,
+                        "latency_seconds": r.latency_seconds,
+                        "assertion_results": [
+                            {"name": a.name, "passed": a.passed, "reason": a.reason}
+                            for a in r.assertion_results
+                        ],
+                    }
+                    for r in report.results
                 ],
-            }
-            for r in report.results
-        ],
-    }, default=str))
+            },
+            default=str,
+        )
+    )
 
 
 def list_behaviors() -> dict:
@@ -159,7 +169,8 @@ _server: BaseMcpServer | None = None
 
 _TOOL_DESCRIPTIONS: dict[str, str] = {
     "create_mock": "Create a new mock agent with a unique ID",
-    "set_behavior": "Configure a mock agent's response behaviors (supports sequential scripting)",
+    "set_behavior": "Configure a mock agent's response behaviors"
+    " (supports sequential scripting)",
     "run_with_mock": "Run a spec file against a mock agent and return results",
     "list_behaviors": "List available behavior templates",
     "destroy_mock": "Remove a mock agent and free its resources",
@@ -171,18 +182,23 @@ _INPUT_SCHEMAS: dict[str, dict] = {
         "properties": {
             "name": {
                 "type": "string",
-                "description": "Optional name for the mock agent (auto-generated if omitted)",
+                "description": "Optional name for the mock agent"
+                " (auto-generated if omitted)",
             },
         },
     },
     "set_behavior": {
         "type": "object",
         "properties": {
-            "agent_id": {"type": "string", "description": "Mock agent ID from create_mock"},
+            "agent_id": {
+                "type": "string",
+                "description": "Mock agent ID from create_mock",
+            },
             "behaviors": {
                 "type": "array",
                 "items": {"type": "object"},
-                "description": "List of behavior configs with step, on, and response fields",
+                "description": "List of behavior configs with"
+                " step, on, and response fields",
             },
         },
         "required": ["agent_id", "behaviors"],
@@ -191,7 +207,10 @@ _INPUT_SCHEMAS: dict[str, dict] = {
         "type": "object",
         "properties": {
             "spec_path": {"type": "string", "description": "Path to the spec file"},
-            "agent_id": {"type": "string", "description": "Mock agent ID from create_mock"},
+            "agent_id": {
+                "type": "string",
+                "description": "Mock agent ID from create_mock",
+            },
         },
         "required": ["spec_path", "agent_id"],
     },
@@ -215,7 +234,13 @@ def _build_server() -> BaseMcpServer:
         return _server
 
     srv = BaseMcpServer("mock-agent")
-    for name in ("create_mock", "set_behavior", "run_with_mock", "list_behaviors", "destroy_mock"):
+    for name in (
+        "create_mock",
+        "set_behavior",
+        "run_with_mock",
+        "list_behaviors",
+        "destroy_mock",
+    ):
         desc = _TOOL_DESCRIPTIONS.get(name, "")
         schema = _INPUT_SCHEMAS.get(name, {"type": "object", "properties": {}})
         func = globals()[name]
@@ -226,6 +251,7 @@ def _build_server() -> BaseMcpServer:
 
 def main() -> None:
     import asyncio
+
     server = _build_server()
     asyncio.run(server.run())
 

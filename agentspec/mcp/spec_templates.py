@@ -25,7 +25,7 @@ tests:
     "rag": """\
 name: "RAG Agent Eval"
 model: deepseek-v4-pro
-system_prompt: "You are a RAG assistant. Answer questions based on the provided context."
+system_prompt: "You are a RAG assistant. Answer based on provided context."
 tests:
   - name: "cites sources"
     prompt: "What is the capital of France?"
@@ -141,7 +141,9 @@ def _describe_template(content: str) -> str:
 def get_template(name: str) -> dict:
     content = TEMPLATES.get(name)
     if content is None:
-        return {"error": f"Template not found: {name}. Available: {', '.join(TEMPLATES)}"}
+        return {
+            "error": f"Template not found: {name}. Available: {', '.join(TEMPLATES)}"
+        }
     try:
         data = yaml.safe_load(content)
         return {"name": name, "spec": data}
@@ -162,7 +164,9 @@ def apply_template(name: str, output_path: str, overrides: dict | None = None) -
         _deep_merge(data, overrides)
 
     with open(output_path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        yaml.dump(
+            data, f, default_flow_style=False, sort_keys=False, allow_unicode=True
+        )
 
     return {
         "path": os.path.abspath(output_path),
@@ -230,6 +234,7 @@ def _build_server() -> BaseMcpServer:
 
 def main() -> None:
     import asyncio
+
     server = _build_server()
     asyncio.run(server.run())
 

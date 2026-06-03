@@ -31,7 +31,9 @@ def _mock_usage(
     return usage
 
 
-def _mock_tool_call(name: str = "get_weather", args: str = '{"city": "London"}') -> MagicMock:
+def _mock_tool_call(
+    name: str = "get_weather", args: str = '{"city": "London"}'
+) -> MagicMock:
     tc = MagicMock()
     tc.function.name = name
     tc.function.arguments = args
@@ -50,12 +52,15 @@ def _mock_response(
 
 @pytest.fixture
 def adapter():
-    config = AdapterConfig(api_key="sk-test", base_url="https://test.api.com", model="test-model")
+    config = AdapterConfig(
+        api_key="sk-test", base_url="https://test.api.com", model="test-model"
+    )
     return OpenAICompatibleAdapter(config)
 
 
 class TestBasicResponse:
     pytestmark = pytest.mark.asyncio
+
     @patch("openai.AsyncOpenAI")
     async def test_returns_text(self, mock_openai, adapter):
         mock_client = AsyncMock()
@@ -96,6 +101,7 @@ class TestBasicResponse:
 
 class TestToolCalls:
     pytestmark = pytest.mark.asyncio
+
     @patch("openai.AsyncOpenAI")
     async def test_extracts_tool_calls(self, mock_openai, adapter):
         mock_client = AsyncMock()
@@ -133,6 +139,7 @@ class TestToolCalls:
 
 class TestTokenUsage:
     pytestmark = pytest.mark.asyncio
+
     @patch("openai.AsyncOpenAI")
     async def test_extracts_token_usage(self, mock_openai, adapter):
         mock_client = AsyncMock()
@@ -164,6 +171,7 @@ class TestTokenUsage:
 
 class TestSystemPrompt:
     pytestmark = pytest.mark.asyncio
+
     @patch("openai.AsyncOpenAI")
     async def test_passes_system_prompt(self, mock_openai, adapter):
         mock_client = AsyncMock()
@@ -197,6 +205,7 @@ class TestSystemPrompt:
 
 class TestModelOverride:
     pytestmark = pytest.mark.asyncio
+
     @patch("openai.AsyncOpenAI")
     async def test_uses_model_override(self, mock_openai, adapter):
         mock_client = AsyncMock()
@@ -226,6 +235,7 @@ class TestModelOverride:
 
 class TestLatency:
     pytestmark = pytest.mark.asyncio
+
     @patch("openai.AsyncOpenAI")
     async def test_records_latency(self, mock_openai, adapter):
         mock_client = AsyncMock()
@@ -265,7 +275,9 @@ class TestConfig:
 
     def test_explicit_config_override(self):
         config = AdapterConfig(
-            api_key="sk-explicit", base_url="https://explicit.api.com", model="gpt-4o",
+            api_key="sk-explicit",
+            base_url="https://explicit.api.com",
+            model="gpt-4o",
         )
         assert config.api_key == "sk-explicit"
         assert config.base_url == "https://explicit.api.com"

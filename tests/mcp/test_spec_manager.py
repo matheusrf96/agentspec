@@ -21,17 +21,21 @@ from agentspec.mcp.spec_manager import (
 @pytest.fixture
 def tmp_spec():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        yaml.dump({
-            "name": "Test Spec",
-            "model": "deepseek-v4-pro",
-            "system_prompt": "You are a test assistant.",
-            "tests": [
-                {
-                    "name": "test1", "prompt": "Hello",
-                    "assertions": [{"type": "output_contains", "value": "hello"}],
-                },
-            ],
-        }, f)
+        yaml.dump(
+            {
+                "name": "Test Spec",
+                "model": "deepseek-v4-pro",
+                "system_prompt": "You are a test assistant.",
+                "tests": [
+                    {
+                        "name": "test1",
+                        "prompt": "Hello",
+                        "assertions": [{"type": "output_contains", "value": "hello"}],
+                    },
+                ],
+            },
+            f,
+        )
         fpath = f.name
     yield fpath
     if os.path.exists(fpath):
@@ -54,10 +58,14 @@ class TestListSpecs:
     def test_lists_specs_in_directory(self, tmp_dir):
         spec_path = os.path.join(tmp_dir, "test.yaml")
         with open(spec_path, "w") as f:
-            yaml.dump({
-                "name": "My Spec", "model": "deepseek-v4-pro",
-                "tests": [{"name": "t1", "prompt": "hi"}],
-            }, f)
+            yaml.dump(
+                {
+                    "name": "My Spec",
+                    "model": "deepseek-v4-pro",
+                    "tests": [{"name": "t1", "prompt": "hi"}],
+                },
+                f,
+            )
         result = list_specs(tmp_dir)
         assert len(result["specs"]) == 1
         assert result["specs"][0]["name"] == "My Spec"
@@ -164,7 +172,9 @@ class TestAddTest:
 
 class TestAddAssertion:
     def test_adds_tool_called_assertion(self, tmp_spec):
-        result = add_assertion(tmp_spec, "test1", "tool_called", tool_name="get_weather")
+        result = add_assertion(
+            tmp_spec, "test1", "tool_called", tool_name="get_weather"
+        )
         assert result["ok"] is True
         with open(tmp_spec) as f:
             data = yaml.safe_load(f)
@@ -174,8 +184,11 @@ class TestAddAssertion:
 
     def test_adds_output_contains_assertion(self, tmp_spec):
         result = add_assertion(
-            tmp_spec, "test1", "output_contains",
-            value="world", case_sensitive=False,
+            tmp_spec,
+            "test1",
+            "output_contains",
+            value="world",
+            case_sensitive=False,
         )
         assert result["ok"] is True
         with open(tmp_spec) as f:
@@ -201,8 +214,11 @@ class TestAddAssertion:
 
     def test_adds_output_contains_any_assertion(self, tmp_spec):
         result = add_assertion(
-            tmp_spec, "test1", "output_contains_any",
-            values=["a", "b"], match="any",
+            tmp_spec,
+            "test1",
+            "output_contains_any",
+            values=["a", "b"],
+            match="any",
         )
         assert result["ok"] is True
         with open(tmp_spec) as f:

@@ -3,7 +3,12 @@ from __future__ import annotations
 import os
 import tempfile
 
-from agentspec.mcp.spec_templates import TEMPLATES, apply_template, get_template, list_templates
+from agentspec.mcp.spec_templates import (
+    TEMPLATES,
+    apply_template,
+    get_template,
+    list_templates,
+)
 
 
 class TestListTemplates:
@@ -83,12 +88,14 @@ class TestApplyTemplate:
             output = f.name
         try:
             result = apply_template(
-                "tool-calling", output,
+                "tool-calling",
+                output,
                 overrides={"name": "My Custom Eval", "model": "gpt-4"},
             )
             assert "error" not in result
             with open(output) as f:
                 import yaml
+
                 data = yaml.safe_load(f)
             assert data["name"] == "My Custom Eval"
             assert data["model"] == "gpt-4"
@@ -103,12 +110,19 @@ class TestApplyTemplate:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             output = f.name
         try:
-            result = apply_template("structured-output", output, overrides={
-                "tests": [{"name": "custom test", "prompt": "do stuff", "assertions": []}],
-            })
+            result = apply_template(
+                "structured-output",
+                output,
+                overrides={
+                    "tests": [
+                        {"name": "custom test", "prompt": "do stuff", "assertions": []}
+                    ],
+                },
+            )
             assert "error" not in result
             with open(output) as f:
                 import yaml
+
                 data = yaml.safe_load(f)
             assert len(data["tests"]) == 1
             assert data["tests"][0]["name"] == "custom test"

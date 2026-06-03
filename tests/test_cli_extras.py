@@ -42,14 +42,30 @@ def mock_adapter_and_runner():
 def spec_dir():
     with tempfile.TemporaryDirectory() as tmp:
         specs = [
-            {"name": "Spec A", "model": "gpt-4", "system_prompt": "test",
-             "tests": [{"name": "t1", "prompt": "hi",
-                        "assertions": [{"type": "output_contains",
-                                        "value": "hello"}]}]},
-            {"name": "Spec B", "model": "gpt-4", "system_prompt": "test",
-             "tests": [{"name": "t2", "prompt": "hey",
-                        "assertions": [{"type": "output_contains",
-                                        "value": "world"}]}]},
+            {
+                "name": "Spec A",
+                "model": "gpt-4",
+                "system_prompt": "test",
+                "tests": [
+                    {
+                        "name": "t1",
+                        "prompt": "hi",
+                        "assertions": [{"type": "output_contains", "value": "hello"}],
+                    }
+                ],
+            },
+            {
+                "name": "Spec B",
+                "model": "gpt-4",
+                "system_prompt": "test",
+                "tests": [
+                    {
+                        "name": "t2",
+                        "prompt": "hey",
+                        "assertions": [{"type": "output_contains", "value": "world"}],
+                    }
+                ],
+            },
         ]
         for i, spec in enumerate(specs):
             path = os.path.join(tmp, f"spec_{i}.yaml")

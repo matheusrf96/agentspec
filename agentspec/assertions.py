@@ -25,7 +25,9 @@ class AssertionResult:
     reason: str = ""
 
 
-def evaluate_assertion(assertion: Assertion, response: AgentResponse) -> AssertionResult:
+def evaluate_assertion(
+    assertion: Assertion, response: AgentResponse
+) -> AssertionResult:
     match assertion:
         case ToolCalledAssertion():
             return _eval_tool_called(assertion, response)
@@ -47,12 +49,16 @@ def evaluate_assertion(assertion: Assertion, response: AgentResponse) -> Asserti
             )
 
 
-def _eval_tool_called(assertion: ToolCalledAssertion, response: AgentResponse) -> AssertionResult:
+def _eval_tool_called(
+    assertion: ToolCalledAssertion, response: AgentResponse
+) -> AssertionResult:
     for tc in response.tool_calls:
         if tc.name == assertion.tool_name:
             if assertion.args is not None:
                 try:
-                    actual = json.loads(tc.args) if isinstance(tc.args, str) else tc.args
+                    actual = (
+                        json.loads(tc.args) if isinstance(tc.args, str) else tc.args
+                    )
                 except json.JSONDecodeError:
                     actual = tc.args
                 if _dict_contains(actual, assertion.args):
@@ -64,7 +70,10 @@ def _eval_tool_called(assertion: ToolCalledAssertion, response: AgentResponse) -
                 return AssertionResult(
                     name=f"tool_called({assertion.tool_name})",
                     passed=False,
-                    reason=f"Tool {assertion.tool_name} called but args mismatch. Got {actual}",
+                    reason=(
+                        f"Tool {assertion.tool_name} called but args mismatch."
+                        f" Got {actual}"
+                    ),
                 )
             return AssertionResult(
                 name=f"tool_called({assertion.tool_name})",
@@ -115,7 +124,9 @@ def _eval_output_contains_any(
     return AssertionResult(
         name=f"output_contains_any(match={assertion.match})",
         passed=passed,
-        reason=f"Matched: {matched}, Missing: {missing}" if not passed else f"Matched: {matched}",
+        reason=f"Matched: {matched}, Missing: {missing}"
+        if not passed
+        else f"Matched: {matched}",
     )
 
 
@@ -142,12 +153,18 @@ def _eval_latency_under(
         return AssertionResult(
             name=f"latency_under({assertion.max_seconds}s)",
             passed=True,
-            reason=f"Response in {response.latency_seconds:.2f}s (limit {assertion.max_seconds}s)",
+            reason=(
+                f"Response in {response.latency_seconds:.2f}s"
+                f" (limit {assertion.max_seconds}s)"
+            ),
         )
     return AssertionResult(
         name=f"latency_under({assertion.max_seconds}s)",
         passed=False,
-        reason=f"Response took {response.latency_seconds:.2f}s (limit {assertion.max_seconds}s)",
+        reason=(
+            f"Response took {response.latency_seconds:.2f}s"
+            f" (limit {assertion.max_seconds}s)"
+        ),
     )
 
 

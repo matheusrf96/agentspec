@@ -58,7 +58,12 @@ class TestRunEval:
     @patch("agentspec.mcp.eval_runner.TestRunner")
     @patch("agentspec.mcp.eval_runner.Spec")
     def test_run_eval_returns_report(
-        self, mock_spec_cls, mock_runner_cls, mock_adapter_cls, mock_spec, mock_report,
+        self,
+        mock_spec_cls,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_spec,
+        mock_report,
     ):
         mock_spec_cls.from_yaml.return_value = mock_spec
         mock_runner = MagicMock()
@@ -84,7 +89,12 @@ class TestRunEval:
     @patch("agentspec.mcp.eval_runner.TestRunner")
     @patch("agentspec.mcp.eval_runner.Spec")
     def test_run_eval_with_overrides(
-        self, mock_spec_cls, mock_runner_cls, mock_adapter_cls, mock_spec, mock_report,
+        self,
+        mock_spec_cls,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_spec,
+        mock_report,
     ):
         mock_spec_cls.from_yaml.return_value = mock_spec
         mock_runner = MagicMock()
@@ -92,8 +102,10 @@ class TestRunEval:
         mock_runner_cls.return_value = mock_runner
 
         result = run_eval(
-            "test.yaml", model="gpt-4",
-            base_url="https://custom.api.com", api_key="sk-test",
+            "test.yaml",
+            model="gpt-4",
+            base_url="https://custom.api.com",
+            api_key="sk-test",
         )
         assert "error" not in result
         mock_runner_cls.assert_called_once()
@@ -104,7 +116,12 @@ class TestRunSingleTest:
     @patch("agentspec.mcp.eval_runner.TestRunner")
     @patch("agentspec.mcp.eval_runner.Spec")
     def test_runs_single_test(
-        self, mock_spec_cls, mock_runner_cls, mock_adapter_cls, mock_spec, mock_report,
+        self,
+        mock_spec_cls,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_spec,
+        mock_report,
     ):
         mock_test = MagicMock(name="test1", prompt="Hello")
         mock_test.configure_mock(name="test1")
