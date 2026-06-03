@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "spec-manager": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.spec_manager"]
+    },
+    "eval-runner": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.eval_runner"]
+    },
+    "results-store": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.results_store"]
+    },
+    "mock-agent": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.mock_agent"]
+    },
+    "spec-templates": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.spec_templates"]
+    },
+    "tests-runner": {
+      "command": "python",
+      "args": ["-m", "agentspec.mcp.tests_runner"]
+    }
+  }
+}
