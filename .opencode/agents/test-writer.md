@@ -1,3 +1,13 @@
+---
+description: Specialist for writing tests for AgentSpec and MCP servers. Use when creating or editing test files.
+mode: subagent
+permission:
+  edit:
+    "tests/**/*.py": "allow"
+  bash:
+    "python -m pytest *": "allow"
+---
+
 # test-writer
 
 Specialist for writing tests for AgentSpec and MCP servers.

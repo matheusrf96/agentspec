@@ -1,3 +1,16 @@
+---
+description: Specialist for scaffolding new MCP servers for AgentSpec. Use when creating a new MCP server or registering it in .mcp.json.
+mode: subagent
+permission:
+  edit:
+    "agentspec/mcp/*.py": "allow"
+    "tests/mcp/*.py": "allow"
+    ".mcp.json": "allow"
+  bash:
+    "ruff check *": "allow"
+    "python -m pytest *": "allow"
+---
+
 # mcp-scaffolder
 
 Specialist for scaffolding new MCP servers for AgentSpec.

@@ -1,3 +1,14 @@
+---
+description: Specialist for writing and editing YAML evaluation specs for AgentSpec. Use when creating, editing, or validating .yaml spec files.
+mode: subagent
+permission:
+  edit:
+    "examples/*.yaml": "allow"
+    "agentspec/**/*.yaml": "allow"
+  bash:
+    "agentspec validate *": "allow"
+---
+
 # spec-writer
 
 Specialist for writing and editing YAML evaluation specs for AgentSpec.

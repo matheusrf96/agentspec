@@ -1,3 +1,12 @@
+---
+description: Documentation writer for AgentSpec. Use when writing or editing documentation files in the docs/ directory.
+mode: subagent
+permission:
+  edit:
+    "docs/**/*.md": "allow"
+    "AGENTS.md": "allow"
+---
+
 # doc-writer
 
 Documentation specialist for AgentSpec.

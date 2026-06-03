@@ -1,36 +1,41 @@
 {
-  "model": "opencode/deepseek-v4",
-  "instructions": "AGENTS.md",
-  "permissions": {
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode-go/deepseek-v4-flash",
+  "instructions": ["AGENTS.md"],
+  "permission": {
     "bash": {
-      "allow": ["python", "pip", "ruff", "git", "mkdir", "ls", "cp", "mv", "rm"],
-      "block": ["rm -rf /", "sudo", "chmod", "chown"]
+      "*": "ask",
+      "python *": "allow",
+      "pip *": "allow",
+      "ruff *": "allow",
+      "git *": "allow",
+      "mkdir *": "allow",
+      "ls": "allow",
+      "cp *": "allow",
+      "mv *": "allow",
+      "rm *": "allow",
+      "trash *": "allow",
+      "rm -rf /": "deny",
+      "sudo *": "deny",
+      "chmod *": "deny",
+      "chown *": "deny"
     },
     "edit": {
-      "allowGlob": [
-        "agentspec/**/*.py",
-        "tests/**/*.py",
-        "examples/**/*.yaml",
-        "docs/**/*.md",
-        "AGENTS.md",
-        "pyproject.toml",
-        ".mcp.json"
-      ]
+      "*": "deny",
+      "agentspec/**/*.py": "allow",
+      "tests/**/*.py": "allow",
+      "examples/**/*.yaml": "allow",
+      "docs/**/*.md": "allow",
+      "AGENTS.md": "allow",
+      "pyproject.toml": "allow",
+      ".mcp.json": "allow"
     },
-    "read": {
-      "allowGlob": ["**"]
-    },
-    "webfetch": {
-      "allow": true
-    },
-    "question": {
-      "allow": true
-    },
-    "todowrite": {
-      "allow": true
-    }
+    "read": "allow",
+    "webfetch": "allow",
+    "question": "allow",
+    "todowrite": "allow"
   },
-  "commands": {
+  "command": {
     "test": {
       "description": "Run all tests",
       "template": "python -m pytest tests/ -v --tb=short"
@@ -49,88 +54,32 @@
     }
   },
   "skills": {
-    "path": ".opencode/skills"
+    "paths": [".opencode/skills"]
   },
-  "subAgents": {
-    "spec-writer": {
-      "path": ".opencode/agents/spec-writer.md",
-      "description": "Specialist for writing and editing YAML evaluation specs",
-      "permissions": {
-        "edit": {
-          "allowGlob": ["examples/*.yaml", "agentspec/**/*.yaml"]
-        },
-        "bash": {
-          "allow": ["agentspec validate"]
-        }
-      }
-    },
-    "test-writer": {
-      "path": ".opencode/agents/test-writer.md",
-      "description": "Specialist for writing tests",
-      "permissions": {
-        "edit": {
-          "allowGlob": ["tests/**/*.py"]
-        },
-        "bash": {
-          "allow": ["python -m pytest"]
-        }
-      }
-    },
-    "code-reviewer": {
-      "path": ".opencode/agents/code-reviewer.md",
-      "description": "Strict code reviewer",
-      "permissions": {
-        "bash": {
-          "allow": ["git diff", "git log", "git show", "git status"]
-        }
-      }
-    },
-    "mcp-scaffolder": {
-      "path": ".opencode/agents/mcp-scaffolder.md",
-      "description": "Scaffolds new MCP servers",
-      "permissions": {
-        "edit": {
-          "allowGlob": ["agentspec/mcp/*.py", "tests/mcp/*.py", ".mcp.json"]
-        },
-        "bash": {
-          "allow": ["ruff check", "python -m pytest"]
-        }
-      }
-    },
-    "doc-writer": {
-      "path": ".opencode/agents/doc-writer.md",
-      "description": "Documentation writer",
-      "permissions": {
-        "edit": {
-          "allowGlob": ["docs/**/*.md", "AGENTS.md"]
-        }
-      }
-    }
-  },
-  "mcpServers": {
+  "mcp": {
     "spec-manager": {
-      "command": "python",
-      "args": ["-m", "agentspec.mcp.spec_manager"]
+      "type": "local",
+      "command": ["python", "-m", "agentspec.mcp.spec_manager"]
     },
     "eval-runner": {
-      "command": "python",
-      "args": ["-m", "agentspec.mcp.eval_runner"]
+      "type": "local",
+      "command": ["python", "-m", "agentspec.mcp.eval_runner"]
     },
     "results-store": {
-      "command": "python",
-      "args": ["-m", "agentspec.mcp.results_store"]
+      "type": "local",
+      "command": ["python", "-m", "agentspec.mcp.results_store"]
     },
     "mock-agent": {
-      "command": "python",
-      "args": ["-m", "agentspec.mcp.mock_agent"]
+      "type": "local",
+      "command": ["python", "-m", "agentspec.mcp.mock_agent"]
     },
     "spec-templates": {
-      "command": "python",
-      "args": ["-m", "agentspec.mcp.spec_templates"]
+      "type": "local",
+      "command": ["python", "-m", "agentspec.mcp.spec_templates"]
     },
     "tests-runner": {
-      "command": "python",
-      "args": ["-m", "agentspec.mcp.tests_runner"]
+      "type": "local",
+      "command": ["python", "-m", "agentspec.mcp.tests_runner"]
     }
   }
 }

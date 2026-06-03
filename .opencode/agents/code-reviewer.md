@@ -1,3 +1,14 @@
+---
+description: Strict code reviewer for AgentSpec project. Use when reviewing pull requests, suggesting code improvements, or auditing code quality.
+mode: subagent
+permission:
+  bash:
+    "git diff": "allow"
+    "git log *": "allow"
+    "git show *": "allow"
+    "git status": "allow"
+---
+
 # code-reviewer
 
 Strict code reviewer for AgentSpec project.
