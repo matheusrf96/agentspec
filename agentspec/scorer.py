@@ -62,3 +62,35 @@ class TestReport:
             if r.token_usage:
                 total += r.token_usage.get("total_tokens", 0)
         return total
+
+
+@dataclass
+class ConsolidatedReport:
+    specs: list[TestReport] = field(default_factory=list)
+
+    @property
+    def summary(self) -> Summary:
+        s = Summary()
+        for report in self.specs:
+            sub = report.summary
+            s.total += sub.total
+            s.passed += sub.passed
+            s.failed += sub.failed
+            s.errors += sub.errors
+        return s
+
+    @property
+    def avg_latency(self) -> float:
+        total_cases = sum(len(r.results) for r in self.specs)
+        if total_cases == 0:
+            return 0.0
+        total = sum(
+            result.latency_seconds
+            for r in self.specs
+            for result in r.results
+        )
+        return total / total_cases
+
+    @property
+    def total_tokens(self) -> int:
+        return sum(r.total_tokens for r in self.specs)

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from typing import Union
 
 from rich.console import Console
 from rich.table import Table
 
-from agentspec.scorer import TestCaseResult, TestReport
+from agentspec.scorer import ConsolidatedReport, TestCaseResult, TestReport
 
 
 @dataclass
@@ -15,20 +16,56 @@ class ReportConfig:
     output_json: bool = False
 
 
+AnyReport = Union[TestReport, ConsolidatedReport]
+
+
 class Reporter:
     def __init__(self, config: ReportConfig | None = None):
         self.config = config or ReportConfig()
         self.console = Console()
 
-    def render(self, report: TestReport) -> None:
-        if self.config.output_json:
-            print(json.dumps(self._to_dict(report), indent=2, ensure_ascii=False))
-            return
+    def render(self, report: AnyReport) -> None:
+        if isinstance(report, ConsolidatedReport):
+            if self.config.output_json:
+                print(
+                    json.dumps(
+                        self._consolidated_to_dict(report),
+                        indent=2,
+                        ensure_ascii=False,
+                    )
+                )
+                return
+            self._render_consolidated(report)
+        else:
+            if self.config.output_json:
+                print(
+                    json.dumps(
+                        self._to_dict(report), indent=2, ensure_ascii=False
+                    )
+                )
+                return
+            self._render_terminal(report)
 
-        self._render_terminal(report)
+    def _render_consolidated(
+        self, report: ConsolidatedReport
+    ) -> None:
+        self.console.print(
+            f"\n[bold cyan]Consolidated Report "
+            f"({len(report.specs)} spec(s))[/bold cyan]\n"
+        )
+        for spec_report in report.specs:
+            self.console.print(
+                f"  [bold]{spec_report.spec_name}[/bold] "
+                f"([dim]{len(spec_report.results)} test(s)[/dim])"
+            )
+            for result in spec_report.results:
+                self._render_test_case(result, indent=4)
+            self.console.print()
+
+        self.console.print("[bold]Aggregate Summary[/bold]")
+        self._render_summary(report)
 
     def _render_terminal(self, report: TestReport) -> None:
-
         self.console.print(f"\n[bold cyan]{report.spec_name}[/bold cyan]")
         self.console.print(f"[dim]{len(report.results)} test(s)[/dim]\n")
 
@@ -38,7 +75,9 @@ class Reporter:
         self.console.print()
         self._render_summary(report)
 
-    def _render_test_case(self, result: TestCaseResult) -> None:
+    def _render_test_case(
+        self, result: TestCaseResult
+    ) -> None:
         if result.error:
             icon = "[bold red]💥[/bold red]"
             label = "ERROR"
@@ -62,9 +101,13 @@ class Reporter:
                 if ar.passed:
                     self.console.print(f"     [dim]✓ {ar.name}[/dim]")
                 else:
-                    self.console.print(f"     [red]✗ {ar.name}: {ar.reason}[/red]")
+                    self.console.print(
+                        f"     [red]✗ {ar.name}: {ar.reason}[/red]"
+                    )
 
-    def _render_summary(self, report: TestReport) -> None:
+    def _render_summary(
+        self, report: TestReport | ConsolidatedReport
+    ) -> None:
         summary = report.summary
 
         table = Table(show_header=False, box=None)
@@ -72,11 +115,16 @@ class Reporter:
         table.add_column("Value")
 
         pass_rate = summary.pass_rate * 100
-        pass_color = "green" if pass_rate >= 80 else ("yellow" if pass_rate >= 50 else "red")
+        pass_color = (
+            "green" if pass_rate >= 80 else (
+                "yellow" if pass_rate >= 50 else "red"
+            )
+        )
 
         table.add_row(
             "Pass rate",
-            f"[{pass_color}]{summary.passed}/{summary.total} ({pass_rate:.0f}%)[/{pass_color}]",
+            f"[{pass_color}]{summary.passed}/{summary.total} "
+            f"({pass_rate:.0f}%)[/{pass_color}]",
         )
         table.add_row("Passed", f"[green]{summary.passed}[/green]")
         table.add_row("Failed", f"[red]{summary.failed}[/red]")
@@ -92,7 +140,11 @@ class Reporter:
             "results": [
                 {
                     "name": r.name,
-                    "status": "error" if r.error else ("pass" if r.passed else "fail"),
+                    "status": (
+                        "error" if r.error else (
+                            "pass" if r.passed else "fail"
+                        )
+                    ),
                     "latency_seconds": r.latency_seconds,
                     "error": r.error,
                     "assertions": [
@@ -106,6 +158,24 @@ class Reporter:
                 }
                 for r in report.results
             ],
+            "summary": {
+                "total": report.summary.total,
+                "passed": report.summary.passed,
+                "failed": report.summary.failed,
+                "errors": report.summary.errors,
+                "pass_rate": report.summary.pass_rate,
+                "avg_latency": report.avg_latency,
+                "total_tokens": report.total_tokens,
+            },
+        }
+
+    def _consolidated_to_dict(
+        self, report: ConsolidatedReport
+    ) -> dict:
+        return {
+            "consolidated": True,
+            "spec_count": len(report.specs),
+            "specs": [self._to_dict(s) for s in report.specs],
             "summary": {
                 "total": report.summary.total,
                 "passed": report.summary.passed,
