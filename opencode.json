@@ -22,7 +22,9 @@
       "sudo *": "deny",
       "chmod *": "deny",
       "chown *": "deny",
-      "pyright *": "allow"
+      "pyright *": "allow",
+      "ruff format *": "allow",
+      "pre-commit *": "allow"
     },
     "edit": {
       "*": "deny",
@@ -35,7 +37,8 @@
       ".mcp.json": "allow",
       ".opencode/skills/**/*.md": "allow",
       ".flake8": "allow",
-      "pyrightconfig.json": "allow"
+      "pyrightconfig.json": "allow",
+      ".pre-commit-config.yaml": "allow"
     },
     "read": "allow",
     "webfetch": "allow",
@@ -45,11 +48,11 @@
   "command": {
     "test": {
       "description": "Run all tests",
-      "template": "python -m pytest tests/ -v --tb=short"
+      "template": "python -m pytest tests/ -v --tb=short --cov=agentspec --cov-fail-under=80"
     },
     "lint": {
-      "description": "Run ruff + flake8 + pyright",
-      "template": "ruff check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/"
+      "description": "Run ruff check + ruff format check + flake8 + pyright",
+      "template": "ruff check . && ruff format --check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/"
     },
     "flake8": {
       "description": "Run flake8 linter",
@@ -57,7 +60,7 @@
     },
     "coverage": {
       "description": "Run tests with coverage",
-      "template": "python -m pytest tests/ --cov=agentspec"
+      "template": "python -m pytest tests/ --cov=agentspec --cov-fail-under=80"
     },
     "validate": {
       "description": "Validate a spec file",
@@ -66,6 +69,10 @@
     "typecheck": {
       "description": "Run pyright type checker",
       "template": "pyright agentspec/ tests/"
+    },
+    "format": {
+      "description": "Auto-format code with ruff",
+      "template": "ruff format agentspec/ tests/"
     }
   },
   "skills": {

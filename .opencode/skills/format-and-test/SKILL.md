@@ -4,18 +4,30 @@ Runs the complete code quality pipeline for AgentSpec.
 
 ## Order
 
-1. `ruff check agentspec/ tests/` — lint check
-2. `ruff format --check agentspec/ tests/` — format check (optional, only if user asks)
-3. `python -m pytest tests/ -v --tb=short` — full test suite
+1. `ruff check .` — lint check
+2. `ruff format --check .` — format check
+3. `flake8 agentspec/ tests/` — flake8 lint
+4. `pyright agentspec/ tests/` — type check
+5. `python -m pytest tests/ -v --cov=agentspec --cov-fail-under=80` — full test suite + coverage
 
 ## Quick Shortcuts
 
 | Command | Action |
 |---------|--------|
-| `ruff check .` | Lint only |
+| `ruff check . && ruff format --check .` | Ruff lint + format |
+| `ruff check . && ruff format --check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/` | All checks |
 | `python -m pytest tests/ -v` | Test only |
-| `ruff check . && python -m pytest tests/ -v` | Both |
 
-## Output
+## Pre-Commit
 
-Report any lint errors or test failures clearly. For test failures, show the failing test name and error message.
+To run automatically on every commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files  # first-time setup
+```
+
+## Coverage
+
+Coverage is enforced at 80% minimum via `--cov-fail-under=80`. If coverage drops below the threshold, tests will fail.

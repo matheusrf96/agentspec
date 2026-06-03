@@ -103,10 +103,10 @@ Layers:
 
 | Command | Action |
 |---------|--------|
-| `python -m pytest tests/ -v` | Run all tests |
+| `python -m pytest tests/ -v --cov=agentspec --cov-fail-under=80` | Run all tests + coverage |
 | `ruff check .` | Lint (ruff) |
+| `ruff format --check .` | Format check (ruff) |
+| `ruff format agentspec/ tests/` | Auto-format |
 | `flake8 agentspec/ tests/` | Lint (flake8) |
-| `ruff check . && flake8 agentspec/ tests/` | Lint (both) |
-| `pyright agentspec/ tests/` | Typecheck |
-| `ruff check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/` | Lint + typecheck |
+| `ruff check . && ruff format --check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/` | All checks |
 | `pip install -e ".[dev]"` | Install with dev deps |
