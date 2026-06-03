@@ -8,6 +8,7 @@ from agentspec.assertions import AssertionResult
 
 @dataclass
 class TestCaseResult:
+    __test__ = False
     name: str
     passed: bool
     error: Optional[str] = None
@@ -32,6 +33,7 @@ class Summary:
 
 @dataclass
 class TestReport:
+    __test__ = False
     spec_name: str
     results: list[TestCaseResult] = field(default_factory=list)
 
