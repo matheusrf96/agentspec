@@ -43,7 +43,7 @@ def _run_spec(spec_path, model, base_url, api_key):
 @click.option(
     "--output",
     "-o",
-    type=click.Choice(["terminal", "json"]),
+    type=click.Choice(["terminal", "json", "html"]),
     default="terminal",
 )
 def run(spec_path, model, base_url, api_key, verbose, output):
@@ -71,7 +71,13 @@ def run(spec_path, model, base_url, api_key, verbose, output):
             return await _run_single(spec_path)
 
     report = asyncio.run(_run_all())
-    reporter = Reporter(ReportConfig(verbose=verbose, output_json=(output == "json")))
+    reporter = Reporter(
+        ReportConfig(
+            verbose=verbose,
+            output_json=(output == "json"),
+            output_html=(output == "html"),
+        )
+    )
     reporter.render(report)
 
 

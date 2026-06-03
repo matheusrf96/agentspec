@@ -15,7 +15,7 @@ from agentspec.spec import (
 def test_tool_called_passes():
     response = AgentResponse(
         text="",
-        tool_calls=[ToolCall(name="get_stock_price", args='{"symbol": "AAPL"}')],
+        tool_calls=[ToolCall(name="get_stock_price", args={"symbol": "AAPL"})],
     )
     assertion = ToolCalledAssertion(tool_name="get_stock_price")
     result = evaluate_assertion(assertion, response)
@@ -32,7 +32,7 @@ def test_tool_called_fails():
 def test_tool_called_with_args_passes():
     response = AgentResponse(
         text="",
-        tool_calls=[ToolCall(name="get_stock_price", args='{"symbol": "AAPL"}')],
+        tool_calls=[ToolCall(name="get_stock_price", args={"symbol": "AAPL"})],
     )
     assertion = ToolCalledAssertion(
         tool_name="get_stock_price", args={"symbol": "AAPL"}
@@ -44,7 +44,7 @@ def test_tool_called_with_args_passes():
 def test_tool_called_with_args_mismatch():
     response = AgentResponse(
         text="",
-        tool_calls=[ToolCall(name="get_stock_price", args='{"symbol": "MSFT"}')],
+        tool_calls=[ToolCall(name="get_stock_price", args={"symbol": "MSFT"})],
     )
     assertion = ToolCalledAssertion(
         tool_name="get_stock_price", args={"symbol": "AAPL"}
@@ -112,7 +112,7 @@ def test_latency_under_fails():
 def test_output_json_schema_passes():
     response = AgentResponse(text=json.dumps({"name": "test", "value": 42}))
     assertion = OutputJsonSchemaAssertion(
-        json_schema={
+        schema={
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
@@ -127,7 +127,7 @@ def test_output_json_schema_passes():
 def test_output_json_schema_fails():
     response = AgentResponse(text=json.dumps({"name": 123}))
     assertion = OutputJsonSchemaAssertion(
-        json_schema={
+        schema={
             "type": "object",
             "properties": {
                 "name": {"type": "string"},

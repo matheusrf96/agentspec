@@ -18,19 +18,21 @@ def mock_runnable():
     return runnable
 
 
-def _make_msg(content: str = "Hello!", tool_calls: list | None = None) -> object:
-    class FakeUsage:
-        input_tokens = 10
-        output_tokens = 20
-        total_tokens = 30
+class _FakeUsage:
+    input_tokens = 10
+    output_tokens = 20
+    total_tokens = 30
 
-    class FakeMsg:
-        def __init__(self):
-            self.content = content
-            self.tool_calls = tool_calls or []
-            self.usage_metadata = FakeUsage()
 
-    return FakeMsg()
+class _FakeMsg:
+    def __init__(self, content: str = "Hello!", tool_calls: list | None = None):
+        self.content = content
+        self.tool_calls = tool_calls or []
+        self.usage_metadata: _FakeUsage | None = _FakeUsage()
+
+
+def _make_msg(content: str = "Hello!", tool_calls: list | None = None) -> _FakeMsg:
+    return _FakeMsg(content=content, tool_calls=tool_calls)
 
 
 class TestTextResponse:

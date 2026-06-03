@@ -62,9 +62,9 @@ class MockAdapter(AgentAdapter):
                 ToolCall(
                     name=tc.get("name", ""),
                     args=(
-                        tc.get("args", "{}")
+                        json.loads(tc.get("args", "{}"))
                         if isinstance(tc.get("args"), str)
-                        else json.dumps(tc.get("args", {}))
+                        else tc.get("args", {})
                     ),
                 )
                 for tc in tool_calls_raw

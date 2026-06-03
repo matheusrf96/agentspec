@@ -7,7 +7,8 @@ def test_from_yaml():
     assert spec.model == "deepseek-v4-pro"
     assert len(spec.tests) == 1
     assert spec.tests[0].name == "says hello"
-    assert spec.tests[0].assertions[0].value == "hello"
+    # only OutputContainsAssertion has attr .value
+    assert spec.tests[0].assertions[0].value == "hello"  # pyright: ignore
 
 
 def test_from_yaml_string():

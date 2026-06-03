@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import time
 from dataclasses import dataclass, field
@@ -49,7 +50,7 @@ class OpenAICompatibleAdapter(AgentAdapter):
         response = await self.client.chat.completions.create(
             model=model_name,
             messages=messages,
-            tools=tools if tools else None,
+            tools=tools if tools else None,  # pyright: ignore
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
         )
@@ -63,8 +64,8 @@ class OpenAICompatibleAdapter(AgentAdapter):
             for tc in choice.message.tool_calls:
                 tool_calls.append(
                     ToolCall(
-                        name=tc.function.name,
-                        args=tc.function.arguments,
+                        name=getattr(tc, "function").name,
+                        args=json.loads(getattr(tc, "function").arguments),
                     )
                 )
 

@@ -37,9 +37,10 @@ class LangChainAdapter(AgentAdapter):
         model: str | None = None,
     ) -> AgentResponse:
         messages: list = []
-        if system_prompt:
+        if system_prompt and SystemMessage is not None:
             messages.append(SystemMessage(content=system_prompt))
-        messages.append(HumanMessage(content=prompt))
+        if HumanMessage is not None:
+            messages.append(HumanMessage(content=prompt))
 
         kwargs: dict[str, Any] = {}
         resolved_model = model or self.config.model
