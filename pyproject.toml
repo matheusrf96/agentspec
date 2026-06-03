@@ -20,6 +20,9 @@ dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
 ]
+langchain = [
+    "langchain-core>=0.3",
+]
 
 [tool.ruff]
 line-length = 100
