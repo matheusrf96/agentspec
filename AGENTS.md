@@ -12,6 +12,7 @@ agentspec init --name "My Eval" > my-spec.yaml  # create spec
 python -m pytest tests/ -v       # run tests
 ruff check .                     # lint (ruff)
 flake8 agentspec/ tests/         # lint (flake8)
+pyright agentspec/ tests/        # typecheck
 ```
 
 ## Project Structure
@@ -61,6 +62,7 @@ Layers:
 - **Python**: 3.10+, strict typing
 - **Testing**: pytest with pytest-asyncio for async tests
 - **Linting**: ruff + flake8 (E, F, W, I rules)
+- **Type checking**: pyright (standard mode)
 - **No markdown files** in project root except AGENTS.md (RULE #0)
 
 ## OpenCode Skills
@@ -73,6 +75,7 @@ Layers:
 | `review-gate` | Enforce flake8 patterns during code review |
 | `scaffold-mcp` | Scaffold a new MCP server |
 | `add-eval-spec` | Create a new evaluation spec from templates |
+| `typecheck-check` | Run pyright type checking, explains suppression patterns |
 
 ## MCP Servers (registered in .mcp.json)
 
@@ -104,4 +107,6 @@ Layers:
 | `ruff check .` | Lint (ruff) |
 | `flake8 agentspec/ tests/` | Lint (flake8) |
 | `ruff check . && flake8 agentspec/ tests/` | Lint (both) |
+| `pyright agentspec/ tests/` | Typecheck |
+| `ruff check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/` | Lint + typecheck |
 | `pip install -e ".[dev]"` | Install with dev deps |

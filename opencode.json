@@ -21,7 +21,8 @@
       "rm -rf /": "deny",
       "sudo *": "deny",
       "chmod *": "deny",
-      "chown *": "deny"
+      "chown *": "deny",
+      "pyright *": "allow"
     },
     "edit": {
       "*": "deny",
@@ -33,7 +34,8 @@
       "pyproject.toml": "allow",
       ".mcp.json": "allow",
       ".opencode/skills/**/*.md": "allow",
-      ".flake8": "allow"
+      ".flake8": "allow",
+      "pyrightconfig.json": "allow"
     },
     "read": "allow",
     "webfetch": "allow",
@@ -46,8 +48,8 @@
       "template": "python -m pytest tests/ -v --tb=short"
     },
     "lint": {
-      "description": "Run ruff + flake8 linters",
-      "template": "ruff check . && flake8 agentspec/ tests/"
+      "description": "Run ruff + flake8 + pyright",
+      "template": "ruff check . && flake8 agentspec/ tests/ && pyright agentspec/ tests/"
     },
     "flake8": {
       "description": "Run flake8 linter",
@@ -60,6 +62,10 @@
     "validate": {
       "description": "Validate a spec file",
       "template": "agentspec validate {{spec_file}}"
+    },
+    "typecheck": {
+      "description": "Run pyright type checker",
+      "template": "pyright agentspec/ tests/"
     }
   },
   "skills": {

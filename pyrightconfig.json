@@ -1,0 +1,15 @@
+{
+  "include": ["agentspec", "tests"],
+  "exclude": [".opencode"],
+  "typeCheckingMode": "standard",
+  "reportMissingImports": true,
+  "reportOptionalCall": true,
+  "reportOptionalMemberAccess": true,
+  "reportOptionalSubscript": true,
+  "reportArgumentType": true,
+  "reportAttributeAccessIssue": true,
+  "reportCallIssue": true,
+  "reportUndefinedVariable": true,
+  "pythonVersion": "3.10",
+  "pythonPlatform": "Linux"
+}
