@@ -29,7 +29,13 @@ agentspec/
   tests/
     test_assertions.py   # 14 tests for assertion evaluation
     test_spec.py         # 4 tests for YAML parsing
+    test_reporter.py     # 21 tests for terminal + JSON report output
+    test_cli.py          # 18 tests for CLI commands (CliRunner)
+    test_openai_adapter.py # 16 tests for API adapter parsing
     mcp/                 # 118 tests for all 6 MCP servers
+  docs/
+    index.md, architecture.md, assertion-types.md, cli-reference.md,
+    mcp-servers.md, contributing.md, faq.md
   examples/
     tool-calling.yaml    # Example spec
   .mcp.json              # MCP server registry (6 servers)
