@@ -23,9 +23,7 @@ def _make_report(
                 passed=True,
                 latency_seconds=0.3,
                 token_usage={"total_tokens": 50},
-                assertion_results=[
-                    AssertionResult(name="check_output", passed=True)
-                ],
+                assertion_results=[AssertionResult(name="check_output", passed=True)],
             )
         )
     for i in range(failed):
@@ -123,9 +121,7 @@ class TestHtmlOutput:
         report = TestReport(
             spec_name="Empty",
             results=[
-                TestCaseResult(
-                    name="no_assertion", passed=True, latency_seconds=0.1
-                )
+                TestCaseResult(name="no_assertion", passed=True, latency_seconds=0.1)
             ],
         )
         html = _build_html(report)

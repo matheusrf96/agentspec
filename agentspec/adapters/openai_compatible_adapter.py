@@ -37,13 +37,37 @@ class OpenAICompatibleAdapter(AgentAdapter):
         prompt: str,
         system_prompt: str | None = None,
         model: str | None = None,
+        fixtures: dict | None = None,
     ) -> AgentResponse:
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
+
+        if fixtures:
+            history = fixtures.get("conversation_history", [])
+            for entry in history:
+                msg: dict = {
+                    "role": entry["role"],
+                    "content": entry["content"],
+                }
+                if entry.get("tool_calls"):
+                    msg["tool_calls"] = entry["tool_calls"]
+                messages.append(msg)
+
+            canned = fixtures.get("canned_responses", [])
+            for cr in canned:
+                if cr["prompt_contains"] in prompt:
+                    return AgentResponse(
+                        text=cr.get("output", ""),
+                        tool_calls=[
+                            ToolCall(**tc) for tc in (cr.get("tool_calls") or [])
+                        ],
+                        latency_seconds=0.0,
+                    )
+
         messages.append({"role": "user", "content": prompt})
 
-        tools = self._build_tools()
+        tools = self._build_tools(fixtures)
         model_name = model or self.config.model
 
         start = time.monotonic()
@@ -84,5 +108,18 @@ class OpenAICompatibleAdapter(AgentAdapter):
             token_usage=token_usage,
         )
 
-    def _build_tools(self) -> list[dict]:
-        return []
+    def _build_tools(self, fixtures: dict | None = None) -> list[dict]:
+        tools = []
+        if fixtures:
+            for mt in fixtures.get("mock_tools", []):
+                tools.append(
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": mt["name"],
+                            "description": mt.get("description", ""),
+                            "parameters": {"type": "object", "properties": {}},
+                        },
+                    }
+                )
+        return tools

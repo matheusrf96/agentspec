@@ -24,10 +24,16 @@ class TestRunner:
 
     async def _run_test(self, test) -> TestCaseResult:
         try:
+            fixtures_dict = (
+                self.spec.fixtures.model_dump(mode="json")
+                if self.spec.fixtures
+                else None
+            )
             response = await self.adapter.run(
                 prompt=test.prompt,
                 system_prompt=self.spec.system_prompt,
                 model=self.spec.model,
+                fixtures=fixtures_dict,
             )
         except Exception as e:
             return TestCaseResult(

@@ -51,7 +51,7 @@ def test_receive_message_returns_none_on_empty_input():
 
 def test_receive_message_handles_multiple_headers():
     data = (
-        'Content-Length: 27\r\nContent-Type: application/json\r\n\r\n'
+        "Content-Length: 27\r\nContent-Type: application/json\r\n\r\n"
         '{"jsonrpc": "2.0", "id": 2}'
     )
     with patch("sys.stdin", StringIO(data)):

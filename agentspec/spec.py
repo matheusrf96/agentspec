@@ -61,6 +61,30 @@ Assertion = (
 )
 
 
+class ConversationEntry(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+    tool_calls: Optional[list[dict]] = None
+
+
+class MockTool(BaseModel):
+    name: str
+    description: Optional[str] = None
+    response: str
+
+
+class CannedResponse(BaseModel):
+    prompt_contains: str
+    output: str = ""
+    tool_calls: Optional[list[dict]] = None
+
+
+class Fixtures(BaseModel):
+    conversation_history: list[ConversationEntry] = Field(default_factory=list)
+    mock_tools: list[MockTool] = Field(default_factory=list)
+    canned_responses: list[CannedResponse] = Field(default_factory=list)
+
+
 class TestCase(BaseModel):
     name: str
     prompt: str
@@ -74,6 +98,7 @@ class Spec(BaseModel):
     model: str = "deepseek-v4-pro"
     system_prompt: Optional[str] = None
     tests: list[TestCase] = Field(default_factory=list)
+    fixtures: Optional[Fixtures] = None
 
     @classmethod
     def from_yaml(cls, path: str) -> Spec:

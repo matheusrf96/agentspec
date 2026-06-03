@@ -111,8 +111,9 @@ def _build_server() -> BaseMcpServer:
 
     srv.tool(
         "run_pytest",
-        description=("Run pytest on the agentspec project"
-                     " with optional path and marker filters"),
+        description=(
+            "Run pytest on the agentspec project with optional path and marker filters"
+        ),
         input_schema={
             "type": "object",
             "properties": {

@@ -33,6 +33,7 @@ class MockAdapter(AgentAdapter):
         prompt: str,
         system_prompt: str | None = None,
         model: str | None = None,
+        fixtures: dict | None = None,
     ) -> AgentResponse:
         for behavior in self._behaviors:
             step = behavior.get("step", 0)

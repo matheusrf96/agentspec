@@ -35,6 +35,7 @@ class LangChainAdapter(AgentAdapter):
         prompt: str,
         system_prompt: str | None = None,
         model: str | None = None,
+        fixtures: dict | None = None,
     ) -> AgentResponse:
         messages: list = []
         if system_prompt and SystemMessage is not None:

@@ -25,5 +25,6 @@ class AgentAdapter(ABC):
         prompt: str,
         system_prompt: str | None = None,
         model: str | None = None,
+        fixtures: dict | None = None,
     ) -> AgentResponse:
-        ...
+        """Run the agent with the given prompt and return a response."""

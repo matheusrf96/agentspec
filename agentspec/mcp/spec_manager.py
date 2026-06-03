@@ -11,7 +11,7 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
     "list_specs": "List spec files in a directory (default: current working directory)",
     "read_spec": "Parse and return a spec file as a structured JSON object",
     "validate_spec": "Validate a spec file without running it, "
-                     "returns valid flag and any errors",
+    "returns valid flag and any errors",
     "create_spec": "Generate a new spec YAML file with the given name and model",
     "add_test": "Add a test case to an existing spec file",
     "add_assertion": "Add an assertion to a test case within a spec file",

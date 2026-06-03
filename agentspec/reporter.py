@@ -192,13 +192,15 @@ def _build_html(report: AnyReport) -> str:
     specs = report.specs if is_consolidated else [report]
     s = report.summary
     pass_rate_pct = s.pass_rate * 100
-    rate_color = "#22c55e" if pass_rate_pct >= 80 else (
-        "#eab308" if pass_rate_pct >= 50 else "#ef4444"
+    rate_color = (
+        "#22c55e"
+        if pass_rate_pct >= 80
+        else ("#eab308" if pass_rate_pct >= 50 else "#ef4444")
     )
 
     rows_html = ""
     for sr in specs:
-        rows_html += f"<h2 class=\"spec-name\">{escape(sr.spec_name)}</h2>\n"
+        rows_html += f'<h2 class="spec-name">{escape(sr.spec_name)}</h2>\n'
         for r in sr.results:
             fm = _fmt_result(r)
             assertions_html = ""
@@ -207,32 +209,30 @@ def _build_html(report: AnyReport) -> str:
                     ic = "\u2714" if ar.passed else "\u2718"
                     cl = "pass" if ar.passed else "fail"
                     assertions_html += (
-                        f"<div class=\"assertion {cl}\">"
-                        f"<span class=\"assert-icon\">{ic}</span> "
-                        f"<span class=\"assert-name\">{escape(ar.name)}</span>"
+                        f'<div class="assertion {cl}">'
+                        f'<span class="assert-icon">{ic}</span> '
+                        f'<span class="assert-name">{escape(ar.name)}</span>'
                     )
                     if ar.reason:
                         assertions_html += (
-                            f"<span class=\"assert-reason\">"
-                            f"{escape(ar.reason)}</span>"
+                            f'<span class="assert-reason">{escape(ar.reason)}</span>'
                         )
                     assertions_html += "</div>\n"
 
             latency = r.latency_seconds
             error_html = (
-                f"<div class=\"test-error\">{escape(r.error)}</div>\n"
-                if r.error else ""
+                f'<div class="test-error">{escape(r.error)}</div>\n' if r.error else ""
             )
             rows_html += (
-                f"<div class=\"test-case {fm['cls']}\" "
-                f"onclick=\"toggle(this)\">\n"
-                f"  <div class=\"test-header\">\n"
-                f"    <span class=\"test-icon\">{fm['icon']}</span>\n"
-                f"    <span class=\"test-label\">{fm['label']}</span>\n"
-                f"    <span class=\"test-name\">{escape(r.name)}</span>\n"
-                f"    <span class=\"test-latency\">{latency:.1f}s</span>\n"
+                f'<div class="test-case {fm["cls"]}" '
+                f'onclick="toggle(this)">\n'
+                f'  <div class="test-header">\n'
+                f'    <span class="test-icon">{fm["icon"]}</span>\n'
+                f'    <span class="test-label">{fm["label"]}</span>\n'
+                f'    <span class="test-name">{escape(r.name)}</span>\n'
+                f'    <span class="test-latency">{latency:.1f}s</span>\n'
                 f"  </div>\n"
-                f"  <div class=\"test-detail\" style=\"display:none\">\n"
+                f'  <div class="test-detail" style="display:none">\n'
                 f"    {error_html}"
                 f"    {assertions_html}"
                 f"  </div>\n"
@@ -240,10 +240,7 @@ def _build_html(report: AnyReport) -> str:
             )
 
     title = "Consolidated Report" if is_consolidated else escape(report.spec_name)
-    sub = (
-        f"({len(report.specs)} specs)"
-        if is_consolidated else ""
-    )
+    sub = f"({len(report.specs)} specs)" if is_consolidated else ""
 
     return f"""<!DOCTYPE html>
 <html lang="en">
