@@ -6,20 +6,32 @@ import json
 import logging
 from typing import Any, Callable
 
-RECV_TIMEOUT = 0.1
-
 _logger = logging.getLogger("mcp")
+
+_use_raw_json: bool | None = None
 
 
 def send_message(msg: dict) -> None:
     body = json.dumps(msg, ensure_ascii=False, default=str)
-    payload = f"Content-Length: {len(body)}\r\n\r\n{body}"
-    __import__("sys").stdout.write(payload)
+    if _use_raw_json is True:
+        __import__("sys").stdout.write(body + "\n")
+    else:
+        payload = f"Content-Length: {len(body)}\r\n\r\n{body}"
+        __import__("sys").stdout.write(payload)
     __import__("sys").stdout.flush()
+
+
+def _parse_content_length(body: str) -> dict | None:
+    try:
+        return json.loads(body)
+    except json.JSONDecodeError:
+        return None
 
 
 def receive_message() -> dict | None:
     import sys as _sys
+
+    global _use_raw_json
 
     line = _sys.stdin.readline()
     if not line:
@@ -27,15 +39,26 @@ def receive_message() -> dict | None:
     line = line.strip()
     if not line:
         return None
-    if not line.startswith("Content-Length:"):
+
+    if line.startswith("Content-Length:"):
+        if _use_raw_json is None:
+            _use_raw_json = False
+        length = int(line.split(":")[1].strip())
+        while True:
+            hl = _sys.stdin.readline()
+            if not hl or hl.strip() == "":
+                break
+        body = _sys.stdin.read(length)
+        return _parse_content_length(body)
+
+    if _use_raw_json is None:
+        _use_raw_json = True
+
+    try:
+        return json.loads(line)
+    except json.JSONDecodeError:
+        _logger.warning("Failed to parse message: %s", line[:200])
         return None
-    length = int(line.split(":")[1].strip())
-    while True:
-        hl = _sys.stdin.readline()
-        if not hl or hl.strip() == "":
-            break
-    body = _sys.stdin.read(length)
-    return json.loads(body)
 
 
 class BaseMcpServer:
@@ -89,8 +112,10 @@ class BaseMcpServer:
 
         try:
             if method == "initialize":
+                params = msg.get("params", {})
+                client_version = params.get("protocolVersion", "2025-03-26")
                 self._send_result(msg_id, {
-                    "protocolVersion": "2025-03-26",
+                    "protocolVersion": client_version,
                     "capabilities": self._capabilities(),
                     "serverInfo": {"name": self.server_name, "version": self.server_version},
                 })
