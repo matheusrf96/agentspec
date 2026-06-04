@@ -1,3 +1,4 @@
+# pyright: reportOptionalCall=false
 from __future__ import annotations
 
 import time
@@ -38,10 +39,9 @@ class LangChainAdapter(AgentAdapter):
         fixtures: dict | None = None,
     ) -> AgentResponse:
         messages: list = []
-        if system_prompt and SystemMessage is not None:
+        if system_prompt:
             messages.append(SystemMessage(content=system_prompt))
-        if HumanMessage is not None:
-            messages.append(HumanMessage(content=prompt))
+        messages.append(HumanMessage(content=prompt))
 
         kwargs: dict[str, Any] = {}
         resolved_model = model or self.config.model
