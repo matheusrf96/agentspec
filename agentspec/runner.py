@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import traceback
 
 from agentspec.adapters.base import AgentAdapter
@@ -9,16 +10,26 @@ from agentspec.spec import Spec
 
 
 class TestRunner:
-    def __init__(self, spec: Spec, adapter: AgentAdapter):
+    def __init__(self, spec: Spec, adapter: AgentAdapter, max_concurrency: int = 1):
         self.spec = spec
         self.adapter = adapter
+        self.max_concurrency = max_concurrency
 
     async def run_all(self) -> TestReport:
-        results: list[TestCaseResult] = []
+        if self.max_concurrency <= 1:
+            results: list[TestCaseResult] = []
+            for test in self.spec.tests:
+                result = await self._run_test(test)
+                results.append(result)
+        else:
+            sem = asyncio.Semaphore(self.max_concurrency)
 
-        for test in self.spec.tests:
-            result = await self._run_test(test)
-            results.append(result)
+            async def _run(sem, test):
+                async with sem:
+                    return await self._run_test(test)
+
+            tasks = [_run(sem, t) for t in self.spec.tests]
+            results = await asyncio.gather(*tasks)
 
         return TestReport(spec_name=self.spec.name, results=results)
 

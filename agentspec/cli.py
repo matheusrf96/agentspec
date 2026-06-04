@@ -20,7 +20,7 @@ def main():
     pass
 
 
-def _run_spec(spec_path, model, base_url, api_key):
+def _run_spec(spec_path, model, base_url, api_key, concurrency):
     spec = Spec.from_yaml(spec_path)
     config = AdapterConfig(
         api_key=api_key or os.getenv("DEEPSEEK_API_KEY", ""),
@@ -28,7 +28,7 @@ def _run_spec(spec_path, model, base_url, api_key):
         model=model or spec.model,
     )
     adapter = OpenAICompatibleAdapter(config)
-    runner = TestRunner(spec, adapter)
+    runner = TestRunner(spec, adapter, max_concurrency=concurrency)
     return runner.run_all()
 
 
@@ -40,17 +40,18 @@ def _run_spec(spec_path, model, base_url, api_key):
     "--api-key", default=None, help="Override API key (env: DEEPSEEK_API_KEY)"
 )
 @click.option("--verbose", "-v", is_flag=True, help="Show assertion details")
+@click.option("--concurrency", "-c", default=1, type=int, help="Max parallel tests")
 @click.option(
     "--output",
     "-o",
     type=click.Choice(["terminal", "json", "html"]),
     default="terminal",
 )
-def run(spec_path, model, base_url, api_key, verbose, output):
+def run(spec_path, model, base_url, api_key, verbose, concurrency, output):
     """Run agent evaluation against a spec file or directory of specs."""
 
     async def _run_single(path):
-        return await _run_spec(path, model, base_url, api_key)
+        return await _run_spec(path, model, base_url, api_key, concurrency)
 
     async def _run_all():
         if os.path.isdir(spec_path):
