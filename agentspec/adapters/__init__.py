@@ -1,4 +1,9 @@
+from agentspec.adapters.anthropic_adapter import (
+    AnthropicAdapter,
+    AnthropicAdapterConfig,
+)
 from agentspec.adapters.base import AgentAdapter, AgentResponse, ToolCall
+from agentspec.adapters.ollama_adapter import OllamaAdapter
 from agentspec.adapters.openai_compatible_adapter import (
     AdapterConfig,
     OpenAICompatibleAdapter,
@@ -10,4 +15,7 @@ __all__ = [
     "ToolCall",
     "OpenAICompatibleAdapter",
     "AdapterConfig",
+    "OllamaAdapter",
+    "AnthropicAdapter",
+    "AnthropicAdapterConfig",
 ]

@@ -26,6 +26,9 @@ dev = [
 langchain = [
     "langchain-core>=0.3",
 ]
+anthropic = [
+    "anthropic>=0.30",
+]
 
 [tool.ruff]
 line-length = 88
