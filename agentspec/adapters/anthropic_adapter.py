@@ -46,9 +46,7 @@ class AnthropicAdapter(AgentAdapter):
         if fixtures:
             history = fixtures.get("conversation_history", [])
             for entry in history:
-                messages.append(
-                    {"role": entry["role"], "content": entry["content"]}
-                )
+                messages.append({"role": entry["role"], "content": entry["content"]})
 
             canned = fixtures.get("canned_responses", [])
             for cr in canned:
