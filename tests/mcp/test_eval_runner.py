@@ -53,6 +53,15 @@ def mock_report():
     return report
 
 
+class TestBuildServer:
+    def test_build_server_returns_server(self):
+        from agentspec.mcp.eval_runner import _build_server
+
+        srv = _build_server()
+        assert srv is not None
+        assert srv.server_name == "eval-runner"
+
+
 class TestRunEval:
     @patch("agentspec.mcp.eval_runner.OpenAICompatibleAdapter")
     @patch("agentspec.mcp.eval_runner.TestRunner")
@@ -147,3 +156,17 @@ class TestRunSingleTest:
         mock_spec_cls.from_yaml.side_effect = ValueError("bad spec")
         result = run_single_test("bad.yaml", "test1")
         assert "error" in result
+
+
+class TestEvalRunnerEdgeCases:
+    def test_run_single_test_nonexistent(self):
+        from agentspec.mcp.eval_runner import run_single_test
+
+        result = run_single_test("/nonexistent.yaml", "test1")
+        assert result is not None
+
+    def test_run_eval_nonexistent(self):
+        from agentspec.mcp.eval_runner import run_eval
+
+        result = run_eval("/nonexistent.yaml")
+        assert result is not None

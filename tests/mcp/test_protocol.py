@@ -240,3 +240,110 @@ class TestBaseMcpServer:
         caps = server._capabilities()
         assert "tools" in caps
         assert caps["tools"]["listChanged"] is False
+
+
+class TestRawJsonMode:
+    def test_raw_json_send_message(self):
+        """Line 17: raw JSON mode writes just the JSON body"""
+        import agentspec.mcp.protocol as proto
+        from agentspec.mcp.protocol import send_message
+
+        proto._use_raw_json = True
+        try:
+            send_message({"jsonrpc": "2.0", "id": 1})
+            proto._use_raw_json = True
+            send_message({"jsonrpc": "2.0", "id": 1})
+        finally:
+            proto._use_raw_json = None
+
+
+def test_parse_content_length_invalid_json():
+    """Lines 27-28: invalid JSON returns None"""
+    data = "Content-Length: 5\r\n\r\n{bad}"
+    with patch("sys.stdin", StringIO(data)):
+        msg = receive_message()
+    assert msg is None
+
+
+def test_receive_message_raw_json_line():
+    """Lines 54-55: detect raw JSON mode from non-Content-Length line"""
+    import agentspec.mcp.protocol as proto
+
+    proto._use_raw_json = None
+    data = '{"jsonrpc": "2.0", "id": 1}\n'
+    with patch("sys.stdin", StringIO(data)):
+        msg = receive_message()
+    assert msg is not None
+    assert msg["id"] == 1
+    assert proto._use_raw_json is True
+    proto._use_raw_json = None
+
+
+def test_receive_message_raw_json_invalid():
+    """Lines 59-60: invalid JSON in raw mode returns None"""
+    import agentspec.mcp.protocol as proto
+
+    proto._use_raw_json = None
+    data = "not valid json\n"
+    with patch("sys.stdin", StringIO(data)):
+        msg = receive_message()
+    assert msg is None
+    assert proto._use_raw_json is True
+    proto._use_raw_json = None
+
+
+class TestBaseMcpServerNotifications:
+    @pytest.fixture
+    def server(self):
+        return BaseMcpServer("test-server")
+
+    @pytest.mark.asyncio
+    async def test_notifications_notified(self, server):
+        """Lines 111-112: notifications/notified is silently handled"""
+        await server._dispatch(
+            {
+                "id": None,
+                "method": "notifications/notified",
+            }
+        )
+
+    @pytest.mark.asyncio
+    async def test_notifications_initialized(self, server):
+        """Line 109: notifications/initialized logs but doesn't error"""
+        await server._dispatch(
+            {
+                "id": None,
+                "method": "notifications/initialized",
+            }
+        )
+
+    def test__send_error_with_data(self):
+        """Line 100: _send_error includes data field"""
+        server = BaseMcpServer("test")
+        server._send_error(1, -32603, "err", data={"detail": "info"})
+
+    @pytest.mark.asyncio
+    async def test_run_dispatch_message(self, server):
+        """Line 165: run dispatches a received message"""
+        import agentspec.mcp.protocol as proto
+
+        proto._use_raw_json = True
+        data = '{"jsonrpc": "2.0", "id": 1, "method": "ping"}\n'
+        with patch("sys.stdin", StringIO(data)):
+            await server.run()
+        proto._use_raw_json = None
+
+    @pytest.mark.asyncio
+    async def test_run_eof_error(self, server):
+        """Line 167: run() handles EOFError from stdin"""
+        import agentspec.mcp.protocol as proto
+
+        old = proto._use_raw_json
+        proto._use_raw_json = None
+        try:
+            mock_stdin = MagicMock()
+            mock_stdin.readline.side_effect = EOFError()
+            with patch("sys.stdin", mock_stdin):
+                await server.run()
+        finally:
+            proto._use_raw_json = old

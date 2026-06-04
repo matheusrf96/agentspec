@@ -291,3 +291,32 @@ class TestRemoveAssertion:
     def test_file_not_found(self):
         result = remove_assertion("/nonexistent.yaml", "t1", 0)
         assert result["ok"] is False
+
+
+class TestBuildServer:
+    def test_build_server_returns_server(self):
+        from agentspec.mcp.spec_manager import _build_server
+
+        srv = _build_server()
+        assert srv is not None
+        assert srv.server_name == "spec-manager"
+
+
+class TestSpecManagerEdgeCases:
+    def test_validate_nonexistent_spec(self):
+        from agentspec.mcp.spec_manager import validate_spec
+
+        result = validate_spec("/nonexistent/file.yaml")
+        assert result["valid"] is False
+
+    def test_read_nonexistent_spec(self):
+        from agentspec.mcp.spec_manager import read_spec
+
+        result = read_spec("/nonexistent/file.yaml")
+        assert "error" in result
+
+    def test_remove_test_nonexistent(self, tmp_spec):
+        from agentspec.mcp.spec_manager import remove_test
+
+        result = remove_test(tmp_spec, "nonexistent_test")
+        assert result is not None

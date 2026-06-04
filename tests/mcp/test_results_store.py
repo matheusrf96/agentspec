@@ -173,3 +173,65 @@ class TestGetTrends:
         trend = result["trends"][0]
         assert "pass_rate" in trend
         assert trend["pass_rate"] == pytest.approx(0.6667, rel=1e-3)
+
+
+class TestBuildServer:
+    def test_build_server_returns_server(self):
+        from agentspec.mcp.results_store import _build_server
+
+        srv = _build_server()
+        assert srv is not None
+        assert srv.server_name == "results-store"
+
+
+class TestResultsStoreEdgeCases:
+    def test_get_run_not_found(self):
+        from agentspec.mcp.results_store import get_run
+
+        result = get_run("nonexistent-id")
+        assert "error" in result
+
+    def test_list_runs_empty(self):
+        from agentspec.mcp.results_store import list_runs
+
+        result = list_runs()
+        assert result is not None
+
+    def test_get_trends_no_data(self):
+        from agentspec.mcp.results_store import get_trends
+
+        result = get_trends(spec_name="nonexistent", days=7)
+        assert result is not None
+
+    def test_get_trends_invalid_days(self):
+        from agentspec.mcp.results_store import get_trends
+
+        result = get_trends(spec_name="test", days=0)
+        assert result is not None
+
+    def test_compare_runs_both_missing(self):
+        from agentspec.mcp.results_store import compare_runs
+
+        result = compare_runs("id1", "id2")
+        assert "error" in result
+
+
+class TestResultsStorePersistence:
+    def test_save_and_list_run(self):
+        from agentspec.mcp.results_store import save_result
+
+        summary = {"total": 1, "passed": 1, "failed": 0, "errors": 0, "pass_rate": 1.0}
+        report = {"spec_name": "test-spec", "summary": summary, "results": []}
+        run_id = save_result(report)
+        assert "run_id" in run_id
+        assert run_id["run_id"] is not None
+
+    def test_save_and_get_run(self):
+        from agentspec.mcp.results_store import get_run, save_result
+
+        summary = {"total": 1, "passed": 1, "failed": 0, "errors": 0, "pass_rate": 1.0}
+        report = {"spec_name": "test-spec-2", "summary": summary, "results": []}
+        saved = save_result(report)
+        retrieved = get_run(saved["run_id"])
+        assert "error" not in retrieved
+        assert retrieved["report"]["spec_name"] == "test-spec-2"

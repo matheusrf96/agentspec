@@ -128,3 +128,38 @@ class TestApplyTemplate:
             assert data["tests"][0]["name"] == "custom test"
         finally:
             os.unlink(output)
+
+
+class TestBuildServer:
+    def test_build_server_returns_server(self):
+        from agentspec.mcp.spec_templates import _build_server
+
+        srv = _build_server()
+        assert srv is not None
+        assert srv.server_name == "spec-templates"
+
+
+class TestSpecTemplatesApplyEdgeCases:
+    def test_apply_template_to_file(self, tmp_path):
+        from agentspec.mcp.spec_templates import apply_template
+
+        out = tmp_path / "out.yaml"
+        result = apply_template("tool-calling", str(out))
+        assert "error" not in result
+        assert result["path"] == str(out)
+        assert out.exists()
+
+    def test_apply_template_with_overrides(self, tmp_path):
+        from agentspec.mcp.spec_templates import apply_template
+
+        out = tmp_path / "out2.yaml"
+        result = apply_template("chat", str(out), overrides={"name": "Custom Chat"})
+        assert "error" not in result
+
+
+class TestSpecTemplatesBuildServer:
+    def test_list_templates_via_server(self):
+        from agentspec.mcp.spec_templates import list_templates
+
+        result = list_templates()
+        assert isinstance(result, dict)

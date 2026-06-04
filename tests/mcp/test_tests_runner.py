@@ -183,3 +183,32 @@ class TestRunAll:
         assert "tests" in result
         mock_ruff.assert_called_once()
         mock_pytest.assert_called_once()
+
+
+class TestBuildServer:
+    def test_build_server_returns_server(self):
+        from agentspec.mcp.tests_runner import _build_server
+
+        srv = _build_server()
+        assert srv is not None
+        assert srv.server_name == "tests-runner"
+
+
+class TestTestsRunnerEdgeCases:
+    def test_run_pytest_empty_path(self):
+        from agentspec.mcp.tests_runner import run_pytest
+
+        result = run_pytest(path="/nonexistent/test_path")
+        assert result is not None
+
+    def test_run_ruff_empty_path(self):
+        from agentspec.mcp.tests_runner import run_ruff
+
+        result = run_ruff(path="/nonexistent/path")
+        assert result is not None
+
+    def test_run_all_empty_path(self):
+        from agentspec.mcp.tests_runner import run_all
+
+        result = run_all(path="/nonexistent")
+        assert result is not None

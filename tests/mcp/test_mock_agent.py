@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 
+import pytest
 import yaml
 
 from agentspec.mcp.mock_agent import (
@@ -222,3 +223,131 @@ class TestListBehaviors:
         for t in result["templates"]:
             assert "description" in t
             assert len(t["description"]) > 0
+
+
+class TestBehaviorMatching:
+    @pytest.mark.asyncio
+    async def test_behavior_with_tool_name_filter(self):
+        from agentspec.mcp.mock_agent import MockAdapter
+
+        adapter = MockAdapter()
+        adapter.configure(
+            [
+                {
+                    "step": 0,
+                    "on": {"tool_name": "get_weather"},
+                    "response": {
+                        "tool_calls": [{"name": "search", "args": {"q": "test"}}],
+                        "text": "ok",
+                    },
+                },
+            ]
+        )
+        resp = await adapter.run(prompt="hello")
+        assert resp.text == ""
+        assert resp.tool_calls == []
+
+    @pytest.mark.asyncio
+    async def test_behavior_with_prompt_matches(self):
+        from agentspec.mcp.mock_agent import MockAdapter
+
+        adapter = MockAdapter()
+        adapter.configure(
+            [
+                {
+                    "step": 0,
+                    "on": {"prompt_matches": "weather"},
+                    "response": {"text": "weather result"},
+                },
+            ]
+        )
+        resp = await adapter.run(prompt="tell me the weather")
+        assert resp.text == "weather result"
+
+    @pytest.mark.asyncio
+    async def test_behavior_prompt_matches_skips(self):
+        """Line 57: prompt_match doesn't match, skip"""
+        from agentspec.mcp.mock_agent import MockAdapter
+
+        adapter = MockAdapter()
+        adapter.configure(
+            [
+                {
+                    "step": 0,
+                    "on": {"prompt_matches": "weather"},
+                    "response": {"text": "weather result"},
+                },
+            ]
+        )
+        resp = await adapter.run(prompt="tell me about sports")
+        assert resp.text == ""
+
+    @pytest.mark.asyncio
+    async def test_behavior_with_latency(self):
+        from agentspec.mcp.mock_agent import MockAdapter
+
+        adapter = MockAdapter()
+        adapter.configure(
+            [
+                {
+                    "step": 0,
+                    "on": {},
+                    "response": {"text": "slow", "latency_seconds": 0.01},
+                },
+            ]
+        )
+        resp = await adapter.run(prompt="hi")
+        assert resp.text == "slow"
+        assert resp.latency_seconds > 0
+
+    @pytest.mark.asyncio
+    async def test_behavior_no_match_falls_through(self):
+        from agentspec.mcp.mock_agent import MockAdapter
+
+        adapter = MockAdapter()
+        adapter.configure(
+            [
+                {
+                    "step": 5,
+                    "on": {},
+                    "response": {"text": "never"},
+                },
+            ]
+        )
+        resp = await adapter.run(prompt="hi")
+        assert resp.text == ""
+        assert resp.latency_seconds == 0.0
+
+
+class TestBuildServer:
+    def test_build_server_returns_server(self):
+        from agentspec.mcp.mock_agent import _build_server
+
+        srv = _build_server()
+        assert srv is not None
+        assert srv.server_name == "mock-agent"
+
+
+class TestMockAgentTools:
+    def test_list_behaviors(self):
+        from agentspec.mcp.mock_agent import list_behaviors
+
+        result = list_behaviors()
+        assert isinstance(result, dict)
+        assert "templates" in result
+        assert len(result["templates"]) > 0
+
+    def test_destroy_mock_not_found(self):
+        from agentspec.mcp.mock_agent import destroy_mock
+
+        result = destroy_mock("nonexistent")
+        assert "error" in result
+
+    def test_create_and_destroy_mock(self):
+        from agentspec.mcp.mock_agent import create_mock, destroy_mock
+
+        created = create_mock("test-agent")
+        aid = created.get("agent_id")
+        assert aid is not None
+        destroyed = destroy_mock(aid)
+        assert "destroyed" in str(destroyed).lower() or "ok" in str(destroyed).lower()
