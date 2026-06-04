@@ -7,11 +7,15 @@ import json
 from agentspec.adapters.base import AgentResponse, ToolCall
 from agentspec.assertions import evaluate_assertion
 from agentspec.spec import (
+    CostUnderAssertion,
     LatencyUnderAssertion,
     OutputContainsAnyAssertion,
     OutputContainsAssertion,
     OutputJsonSchemaAssertion,
+    OutputLengthBetweenAssertion,
     OutputMatchesAssertion,
+    OutputNotContainsAssertion,
+    ToolCallCountAssertion,
     ToolCalledAssertion,
 )
 
@@ -231,3 +235,175 @@ def test_tool_called_args_expected_has_extra_key():
     assertion = ToolCalledAssertion(tool_name="test", args={"a": 1, "b": 2})
     result = evaluate_assertion(assertion, response)
     assert result.passed is False
+
+
+class TestToolCallCount:
+    def test_exact_match(self):
+        response = AgentResponse(
+            text="",
+            tool_calls=[ToolCall(name="a", args={}), ToolCall(name="b", args={})],
+        )
+        assertion = ToolCallCountAssertion(exact=2)
+        assert evaluate_assertion(assertion, response).passed is True
+
+    def test_exact_mismatch(self):
+        response = AgentResponse(text="", tool_calls=[ToolCall(name="a", args={})])
+        assertion = ToolCallCountAssertion(exact=2)
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_min_count(self):
+        response = AgentResponse(
+            text="",
+            tool_calls=[
+                ToolCall(name="a", args={}),
+                ToolCall(name="b", args={}),
+                ToolCall(name="c", args={}),
+            ],
+        )
+        assertion = ToolCallCountAssertion(min_count=2)
+        assert evaluate_assertion(assertion, response).passed is True
+
+    def test_min_count_fails(self):
+        response = AgentResponse(text="", tool_calls=[ToolCall(name="a", args={})])
+        assertion = ToolCallCountAssertion(min_count=2)
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_max_count(self):
+        response = AgentResponse(text="", tool_calls=[ToolCall(name="a", args={})])
+        assertion = ToolCallCountAssertion(max_count=2)
+        assert evaluate_assertion(assertion, response).passed is True
+
+    def test_max_count_fails(self):
+        response = AgentResponse(
+            text="",
+            tool_calls=[
+                ToolCall(name="a", args={}),
+                ToolCall(name="b", args={}),
+                ToolCall(name="c", args={}),
+            ],
+        )
+        assertion = ToolCallCountAssertion(max_count=2)
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_no_tool_calls_exact_zero(self):
+        response = AgentResponse(text="", tool_calls=[])
+        assertion = ToolCallCountAssertion(exact=0)
+        assert evaluate_assertion(assertion, response).passed is True
+
+
+class TestOutputNotContains:
+    def test_passes_when_absent(self):
+        response = AgentResponse(text="hello world")
+        assertion = OutputNotContainsAssertion(value="forbidden")
+        result = evaluate_assertion(assertion, response)
+        assert result.passed is True
+
+    def test_fails_when_present(self):
+        response = AgentResponse(text="contains forbidden content")
+        assertion = OutputNotContainsAssertion(value="forbidden")
+        result = evaluate_assertion(assertion, response)
+        assert result.passed is False
+
+    def test_case_insensitive(self):
+        response = AgentResponse(text="Forbidden Content")
+        assertion = OutputNotContainsAssertion(value="forbidden", case_sensitive=False)
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_case_sensitive(self):
+        response = AgentResponse(text="Forbidden Content")
+        assertion = OutputNotContainsAssertion(value="forbidden", case_sensitive=True)
+        assert evaluate_assertion(assertion, response).passed is True
+
+
+class TestCostUnder:
+    def test_passes_when_under(self):
+        response = AgentResponse(
+            text="",
+            token_usage={
+                "prompt_tokens": 100,
+                "completion_tokens": 50,
+                "total_tokens": 150,
+            },
+        )
+        assertion = CostUnderAssertion(
+            max_cost=0.01,
+            input_price_per_token=0.00001,
+            output_price_per_token=0.00002,
+        )
+        result = evaluate_assertion(assertion, response)
+        assert result.passed is True
+
+    def test_fails_when_over(self):
+        response = AgentResponse(
+            text="",
+            token_usage={
+                "prompt_tokens": 10000,
+                "completion_tokens": 5000,
+                "total_tokens": 15000,
+            },
+        )
+        assertion = CostUnderAssertion(
+            max_cost=0.01,
+            input_price_per_token=0.00001,
+            output_price_per_token=0.00002,
+        )
+        result = evaluate_assertion(assertion, response)
+        assert result.passed is False
+
+    def test_fails_when_no_token_usage(self):
+        response = AgentResponse(text="")
+        assertion = CostUnderAssertion(max_cost=0.01)
+        result = evaluate_assertion(assertion, response)
+        assert result.passed is False
+
+    def test_zero_price_defaults(self):
+        response = AgentResponse(
+            text="",
+            token_usage={
+                "prompt_tokens": 100,
+                "completion_tokens": 50,
+                "total_tokens": 150,
+            },
+        )
+        assertion = CostUnderAssertion(max_cost=0.01)
+        result = evaluate_assertion(assertion, response)
+        assert result.passed is True  # cost is 0 with no pricing
+
+
+class TestOutputLengthBetween:
+    def test_chars_within_bounds(self):
+        response = AgentResponse(text="hello")
+        assertion = OutputLengthBetweenAssertion(min_length=1, max_length=10)
+        assert evaluate_assertion(assertion, response).passed is True
+
+    def test_chars_too_short(self):
+        response = AgentResponse(text="hi")
+        assertion = OutputLengthBetweenAssertion(min_length=5)
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_chars_too_long(self):
+        response = AgentResponse(text="hello world this is long")
+        assertion = OutputLengthBetweenAssertion(max_length=10)
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_tokens_within_bounds(self):
+        response = AgentResponse(
+            text="some text",
+            token_usage={"completion_tokens": 50},
+        )
+        assertion = OutputLengthBetweenAssertion(
+            min_length=10, max_length=100, unit="tokens"
+        )
+        assert evaluate_assertion(assertion, response).passed is True
+
+    def test_tokens_no_usage_fails(self):
+        response = AgentResponse(text="some text")
+        assertion = OutputLengthBetweenAssertion(
+            min_length=1, max_length=100, unit="tokens"
+        )
+        assert evaluate_assertion(assertion, response).passed is False
+
+    def test_exact_bounds(self):
+        response = AgentResponse(text="12345")
+        assertion = OutputLengthBetweenAssertion(min_length=5, max_length=5)
+        assert evaluate_assertion(assertion, response).passed is True

@@ -9,11 +9,15 @@ import jsonschema
 from agentspec.adapters.base import AgentResponse
 from agentspec.spec import (
     Assertion,
+    CostUnderAssertion,
     LatencyUnderAssertion,
     OutputContainsAnyAssertion,
     OutputContainsAssertion,
     OutputJsonSchemaAssertion,
+    OutputLengthBetweenAssertion,
     OutputMatchesAssertion,
+    OutputNotContainsAssertion,
+    ToolCallCountAssertion,
     ToolCalledAssertion,
 )
 
@@ -41,6 +45,14 @@ def evaluate_assertion(
             return _eval_latency_under(assertion, response)
         case OutputJsonSchemaAssertion():
             return _eval_output_json_schema(assertion, response)
+        case ToolCallCountAssertion():
+            return _eval_tool_call_count(assertion, response)
+        case OutputNotContainsAssertion():
+            return _eval_output_not_contains(assertion, response)
+        case CostUnderAssertion():
+            return _eval_cost_under(assertion, response)
+        case OutputLengthBetweenAssertion():
+            return _eval_output_length_between(assertion, response)
         case _:
             return AssertionResult(
                 name="unknown",
@@ -192,6 +204,127 @@ def _eval_output_json_schema(
             passed=False,
             reason=f"Schema validation failed: {e.message}",
         )
+
+
+def _eval_tool_call_count(
+    assertion: ToolCallCountAssertion, response: AgentResponse
+) -> AssertionResult:
+    count = len(response.tool_calls)
+    if assertion.exact is not None:
+        if count == assertion.exact:
+            return AssertionResult(
+                name=f"tool_call_count(exact={assertion.exact})",
+                passed=True,
+                reason=f"Tool call count is {count}",
+            )
+        return AssertionResult(
+            name=f"tool_call_count(exact={assertion.exact})",
+            passed=False,
+            reason=f"Expected {assertion.exact} tool calls, got {count}",
+        )
+
+    if assertion.min_count is not None and count < assertion.min_count:
+        return AssertionResult(
+            name=f"tool_call_count(min={assertion.min_count})",
+            passed=False,
+            reason=f"Expected >= {assertion.min_count} tool calls, got {count}",
+        )
+    if assertion.max_count is not None and count > assertion.max_count:
+        return AssertionResult(
+            name=f"tool_call_count(max={assertion.max_count})",
+            passed=False,
+            reason=f"Expected <= {assertion.max_count} tool calls, got {count}",
+        )
+
+    return AssertionResult(
+        name="tool_call_count",
+        passed=True,
+        reason=f"Tool call count {count} is within bounds",
+    )
+
+
+def _eval_output_not_contains(
+    assertion: OutputNotContainsAssertion, response: AgentResponse
+) -> AssertionResult:
+    text = response.text if assertion.case_sensitive else response.text.lower()
+    value = assertion.value if assertion.case_sensitive else assertion.value.lower()
+    if value not in text:
+        return AssertionResult(
+            name=f"output_not_contains({assertion.value!r})",
+            passed=True,
+            reason=f"Output does not contain {assertion.value!r}",
+        )
+    return AssertionResult(
+        name=f"output_not_contains({assertion.value!r})",
+        passed=False,
+        reason=f"Output contains forbidden content {assertion.value!r}",
+    )
+
+
+def _eval_cost_under(
+    assertion: CostUnderAssertion, response: AgentResponse
+) -> AssertionResult:
+    if not response.token_usage:
+        return AssertionResult(
+            name=f"cost_under({assertion.max_cost})",
+            passed=False,
+            reason="No token usage data available to compute cost",
+        )
+
+    input_price = assertion.input_price_per_token or 0.0
+    output_price = assertion.output_price_per_token or 0.0
+
+    input_tokens = response.token_usage.get("prompt_tokens", 0)
+    output_tokens = response.token_usage.get("completion_tokens", 0)
+    total_cost = (input_tokens * input_price) + (output_tokens * output_price)
+
+    if total_cost <= assertion.max_cost:
+        return AssertionResult(
+            name=f"cost_under({assertion.max_cost})",
+            passed=True,
+            reason=f"Cost ${total_cost:.6f} is under ${assertion.max_cost:.6f}",
+        )
+    return AssertionResult(
+        name=f"cost_under({assertion.max_cost})",
+        passed=False,
+        reason=(f"Cost ${total_cost:.6f} exceeds max ${assertion.max_cost:.6f}"),
+    )
+
+
+def _eval_output_length_between(
+    assertion: OutputLengthBetweenAssertion, response: AgentResponse
+) -> AssertionResult:
+    if assertion.unit == "tokens":
+        if not response.token_usage:
+            return AssertionResult(
+                name="output_length_between",
+                passed=False,
+                reason="No token usage data available",
+            )
+        length = response.token_usage.get("completion_tokens", 0)
+        unit_label = "tokens"
+    else:
+        length = len(response.text)
+        unit_label = "chars"
+
+    if assertion.min_length is not None and length < assertion.min_length:
+        return AssertionResult(
+            name="output_length_between",
+            passed=False,
+            reason=f"Output length {length} {unit_label} < min {assertion.min_length}",
+        )
+    if assertion.max_length is not None and length > assertion.max_length:
+        return AssertionResult(
+            name="output_length_between",
+            passed=False,
+            reason=f"Output length {length} {unit_label} > max {assertion.max_length}",
+        )
+
+    return AssertionResult(
+        name="output_length_between",
+        passed=True,
+        reason=f"Output length {length} {unit_label} is within bounds",
+    )
 
 
 def _dict_contains(actual: dict, expected: dict) -> bool:
