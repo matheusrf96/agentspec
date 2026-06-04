@@ -1,0 +1,9 @@
+- name: "Included test 1"
+  prompt: "Hello from included"
+  assertions:
+    - type: output_contains
+      value: "hello"
+      case_sensitive: false
+- name: "Included test 2"
+  prompt: "Another included test"
+  assertions: []
