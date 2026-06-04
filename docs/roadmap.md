@@ -15,10 +15,10 @@
 - [x] **Test fixture system** — Specs gain a `fixtures` section for pre-seeded conversation history, mock tool definitions, and canned responses
 - [x] **GitHub Actions integration** — Reusable action that runs eval specs and posts result tables on PRs
 
-## Tier 3 — More adapters (current)
+## Tier 3 — More adapters ✅
 
-- [ ] **Ollama adapter** — Zero-cost local evaluation (OpenAI-compatible, just needs dedicated defaults)
-- [ ] **Anthropic adapter** — Native Claude support via `anthropic` SDK with proper message format conversion
+- [x] **Ollama adapter** — Zero-cost local evaluation (OpenAI-compatible, just needs dedicated defaults)
+- [x] **Anthropic adapter** — Native Claude support via `anthropic` SDK with proper message format conversion
 
 ## Tier 4 — Power features
 
