@@ -19,6 +19,7 @@ agentspec = "agentspec.cli:main"
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "pytest-cov>=4.0",
     "flake8>=7.0",
     "flake8-pyproject>=1.2",
 ]
