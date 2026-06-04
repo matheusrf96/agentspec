@@ -103,7 +103,7 @@ Layers:
 
 | Command | Action |
 |---------|--------|
-| `python -m pytest tests/ -v --cov=agentspec --cov-fail-under=80` | Run all tests + coverage |
+| `python -m pytest tests/ -v --cov=agentspec --cov-fail-under=95` | Run all tests + coverage (95% min) |
 | `ruff check .` | Lint (ruff) |
 | `ruff format --check .` | Format check (ruff) |
 | `ruff format agentspec/ tests/` | Auto-format |

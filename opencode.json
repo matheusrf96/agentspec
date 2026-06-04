@@ -48,7 +48,7 @@
   "command": {
     "test": {
       "description": "Run all tests",
-      "template": "python -m pytest tests/ -v --tb=short --cov=agentspec --cov-fail-under=80"
+      "template": "python -m pytest tests/ -v --tb=short --cov=agentspec --cov-fail-under=95"
     },
     "lint": {
       "description": "Run ruff check + ruff format check + flake8 + pyright",
@@ -60,7 +60,7 @@
     },
     "coverage": {
       "description": "Run tests with coverage",
-      "template": "python -m pytest tests/ --cov=agentspec --cov-fail-under=80"
+      "template": "python -m pytest tests/ --cov=agentspec --cov-fail-under=95"
     },
     "validate": {
       "description": "Validate a spec file",

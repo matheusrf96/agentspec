@@ -278,7 +278,7 @@ def _build_server() -> BaseMcpServer:
     return srv
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     import asyncio
 
     server = _build_server()
@@ -286,4 +286,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pragma: no cover
