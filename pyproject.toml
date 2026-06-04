@@ -38,8 +38,16 @@ select = ["E", "F", "W", "I"]
 testpaths = ["tests"]
 addopts = "--cov=agentspec --cov-report=term-missing"
 
+[tool.coverage.run]
+omit = []
+source = ["agentspec"]
+
 [tool.coverage.report]
-fail_under = 80
+fail_under = 95
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
 
 [build-system]
 requires = ["setuptools>=68.0"]

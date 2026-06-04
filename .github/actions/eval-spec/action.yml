@@ -1,0 +1,85 @@
+name: "AgentSpec Eval"
+description: >
+    Run agent evaluation specs and post results as a PR comment.
+author: "agentspec"
+
+inputs:
+    spec-path:
+        description: "Path to spec YAML file or directory"
+        required: true
+        default: "spec.yaml"
+    github-token:
+        description: "GitHub token for posting PR comments"
+        required: true
+        default: "${{ github.token }}"
+    model:
+        description: "Override model name"
+        required: false
+        default: ""
+    base-url:
+        description: "Override API base URL"
+        required: false
+        default: ""
+    api-key:
+        description: "Override API key (env: DEEPSEEK_API_KEY)"
+        required: false
+        default: ""
+    version:
+        description: "agentspec package version (default: latest)"
+        required: false
+        default: ""
+
+runs:
+    using: "composite"
+    steps:
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+              python-version: "3.12"
+
+        - name: Install agentspec
+          shell: bash
+          run: |
+              VER="${{ inputs.version }}"
+              if [ -n "$VER" ]; then
+                pip install "agentspec==$VER"
+              else
+                pip install agentspec
+              fi
+
+        - name: Run eval
+          id: eval
+          shell: bash
+          env:
+              DEEPSEEK_API_KEY: ${{ inputs.api-key }}
+              LLM_BASE_URL: ${{ inputs.base-url }}
+          run: |
+              ARGS=""
+              if [ -n "${{ inputs.model }}" ]; then
+                ARGS="$ARGS --model ${{ inputs.model }}"
+              fi
+              if [ -n "${{ inputs.base-url }}" ]; then
+                ARGS="$ARGS --base-url ${{ inputs.base-url }}"
+              fi
+              if [ -n "${{ inputs.api-key }}" ]; then
+                ARGS="$ARGS --api-key ${{ inputs.api-key }}"
+              fi
+              OUTPUT=$(agentspec run "${{ inputs.spec-path }}" \
+                --output json $ARGS 2>&1) || true
+              echo "RESULTS<<EOF" >> "$GITHUB_ENV"
+              echo "$OUTPUT" >> "$GITHUB_ENV"
+              echo "EOF" >> "$GITHUB_ENV"
+
+        - name: Post PR comment
+          if: github.event_name == 'pull_request'
+          shell: bash
+          env:
+              GH_TOKEN: ${{ inputs.github-token }}
+          run: |
+              COMMENT=$(python3 "${{ github.action_path }}/post_comment.py" \
+                <<< "$RESULTS")
+              echo "$COMMENT" > /tmp/pr_comment.md
+              PR_NUM="${{ github.event.pull_request.number }}"
+              if [ -n "$PR_NUM" ]; then
+                gh pr comment "$PR_NUM" --body-file /tmp/pr_comment.md
+              fi

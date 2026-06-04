@@ -1,0 +1,21 @@
+name: "AgentSpec Evaluation"
+
+on:
+    pull_request:
+        paths:
+            - "specs/**/*.yaml"
+            - "specs/**/*.yml"
+
+jobs:
+    evaluate:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Run AgentSpec eval
+              uses: ./.github/actions/eval-spec
+              with:
+                  spec-path: "specs/"
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  api-key: ${{ secrets.DEEPSEEK_API_KEY }}
+                  model: "deepseek-v4-pro"
