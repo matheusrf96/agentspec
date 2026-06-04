@@ -23,7 +23,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e ".[dev,langchain]"
+          pip install -e ".[dev,langchain,anthropic]"
+
+      - name: Install lint tools
+        run: |
+          pip install ruff
 
       - name: Lint with ruff
         run: |
