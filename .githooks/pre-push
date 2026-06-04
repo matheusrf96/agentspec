@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Pre-push hook: runs the same checks as CI
+# Install: git config core.hooksPath .githooks
+
+echo "=== Pre-push Validation ==="
+
+echo "--- ruff check ---"
+ruff check . || { echo "FAIL: Fix ruff errors before pushing"; exit 1; }
+
+echo "--- ruff format ---"
+ruff format --check . || { echo "FAIL: Run 'ruff format .' before pushing"; exit 1; }
+
+echo "--- flake8 ---"
+flake8 agentspec/ tests/ || { echo "FAIL: Fix flake8 errors before pushing"; exit 1; }
+
+echo "--- pytest ---"
+python -m pytest tests/ -q --tb=short || { echo "FAIL: Fix test failures before pushing"; exit 1; }
+
+echo "=== All checks passed! ==="
