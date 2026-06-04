@@ -4,7 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agentspec.adapters.anthropic_adapter import AnthropicAdapter, AnthropicAdapterConfig
+from agentspec.adapters.anthropic_adapter import (
+    AnthropicAdapter,
+    AnthropicAdapterConfig,
+)
 
 
 def _make_response(text: str = "reply") -> MagicMock:
@@ -66,7 +69,9 @@ class TestAnthropicFixtures:
                     {
                         "prompt_contains": "trigger",
                         "output": "tool result",
-                        "tool_calls": [{"name": "get_weather", "args": {"city": "London"}}],
+                        "tool_calls": [
+                            {"name": "get_weather", "args": {"city": "London"}},
+                        ],
                     }
                 ]
             },
@@ -78,7 +83,9 @@ class TestAnthropicFixtures:
     async def test_build_tools_with_mock_tools(self):
         adapter = AnthropicAdapter(AnthropicAdapterConfig(api_key="sk-test"))
         adapter.client = AsyncMock()
-        adapter.client.messages.create = AsyncMock(return_value=_make_response("using tool"))
+        adapter.client.messages.create = AsyncMock(
+            return_value=_make_response("using tool")
+        )
 
         await adapter.run(
             prompt="use tool",

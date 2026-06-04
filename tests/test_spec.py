@@ -137,6 +137,7 @@ tests:
     assert spec.tests[0].name == "From child"
     assert spec.tests[1].name == "Local"
 
+
 def test_include_empty_file(tmp_path):
     included = tmp_path / "empty.yaml"
     included.write_text("")
