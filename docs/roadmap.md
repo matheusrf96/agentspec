@@ -7,19 +7,18 @@
 - [x] OpenAI adapter tests (response parsing, errors, config)
 - [x] Documentation (architecture, assertion types, MCP servers, CLI reference, contributing guide, FAQ)
 
-## Tier 2 — Feature roadmap (from README)
+## Tier 2 — Feature roadmap (from README) ✅
 
-- [ ] **LangChain adapter** — Wrap any LangChain agent as an `AgentAdapter` so specs can run against LangChain-based agents
-- [ ] **Directory-based specs** — `agentspec run ./specs/` discovers and runs all `.yaml` files in a directory, returning a consolidated report
-- [ ] **HTML report output** — `agentspec run --output html` generates a self-contained HTML page with pass/fail visualization and drill-down
-- [ ] **Test fixture system** — Specs gain a `fixtures` section for pre-seeded conversation history, mock tool definitions, and canned responses
-- [ ] **GitHub Actions integration** — Reusable action that runs eval specs and posts result tables on PRs
+- [x] **LangChain adapter** — Wrap any LangChain agent as an `AgentAdapter` so specs can run against LangChain-based agents
+- [x] **Directory-based specs** — `agentspec run ./specs/` discovers and runs all `.yaml` files in a directory, returning a consolidated report
+- [x] **HTML report output** — `agentspec run --output html` generates a self-contained HTML page with pass/fail visualization and drill-down
+- [x] **Test fixture system** — Specs gain a `fixtures` section for pre-seeded conversation history, mock tool definitions, and canned responses
+- [x] **GitHub Actions integration** — Reusable action that runs eval specs and posts result tables on PRs
 
-## Tier 3 — More adapters
+## Tier 3 — More adapters (current)
 
 - [ ] **Ollama adapter** — Zero-cost local evaluation (OpenAI-compatible, just needs dedicated defaults)
 - [ ] **Anthropic adapter** — Native Claude support via `anthropic` SDK with proper message format conversion
-- [ ] **LangChain adapter** (also in Tier 2) — Full LangChain agent wrapper
 
 ## Tier 4 — Power features
 
