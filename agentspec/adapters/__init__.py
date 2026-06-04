@@ -3,6 +3,7 @@ from agentspec.adapters.anthropic_adapter import (
     AnthropicAdapterConfig,
 )
 from agentspec.adapters.base import AgentAdapter, AgentResponse, ToolCall
+from agentspec.adapters.caching_adapter import CachingAdapter
 from agentspec.adapters.ollama_adapter import OllamaAdapter
 from agentspec.adapters.openai_compatible_adapter import (
     AdapterConfig,
@@ -18,4 +19,5 @@ __all__ = [
     "OllamaAdapter",
     "AnthropicAdapter",
     "AnthropicAdapterConfig",
+    "CachingAdapter",
 ]
