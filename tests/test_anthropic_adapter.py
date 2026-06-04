@@ -55,9 +55,7 @@ def adapter():
 
 class TestAnthropicDefaults:
     def test_default_model(self):
-        adapter = AnthropicAdapter(
-            AnthropicAdapterConfig(api_key="sk-test")
-        )
+        adapter = AnthropicAdapter(AnthropicAdapterConfig(api_key="sk-test"))
         assert adapter.config.model == "claude-sonnet-4-20250514"
 
     def test_env_api_key(self, monkeypatch):
@@ -73,9 +71,7 @@ class TestAnthropicRun:
     async def test_returns_text(self, mock_anthropic, adapter):
         mock_client = AsyncMock()
         mock_client.messages.create = AsyncMock(
-            return_value=_mock_response(
-                content=[_mock_text_block("Hello from Claude")]
-            )
+            return_value=_mock_response(content=[_mock_text_block("Hello from Claude")])
         )
         mock_anthropic.return_value = mock_client
         adapter.client = mock_client
@@ -88,9 +84,7 @@ class TestAnthropicRun:
     async def test_returns_empty_text(self, mock_anthropic, adapter):
         mock_client = AsyncMock()
         mock_client.messages.create = AsyncMock(
-            return_value=_mock_response(
-                content=[_mock_text_block("")]
-            )
+            return_value=_mock_response(content=[_mock_text_block("")])
         )
         mock_anthropic.return_value = mock_client
         adapter.client = mock_client
@@ -102,9 +96,7 @@ class TestAnthropicRun:
     async def test_no_tool_calls_by_default(self, mock_anthropic, adapter):
         mock_client = AsyncMock()
         mock_client.messages.create = AsyncMock(
-            return_value=_mock_response(
-                content=[_mock_text_block("Just text")]
-            )
+            return_value=_mock_response(content=[_mock_text_block("Just text")])
         )
         mock_anthropic.return_value = mock_client
         adapter.client = mock_client
