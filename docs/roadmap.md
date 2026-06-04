@@ -20,16 +20,16 @@
 - [x] **Ollama adapter** — Zero-cost local evaluation (OpenAI-compatible, just needs dedicated defaults)
 - [x] **Anthropic adapter** — Native Claude support via `anthropic` SDK with proper message format conversion
 
-## Tier 4 — Power features
+## Tier 4 — Power features ✅
 
-- [ ] **Concurrent evaluation** — Run tests in parallel via `asyncio.gather()` with configurable concurrency limits
-- [ ] **Caching layer** — `CachingAdapter` wraps any adapter to cache LLM responses keyed by `(prompt, system, model)` for deterministic re-runs
-- [ ] **New assertion types**
+- [x] **Concurrent evaluation** — Run tests in parallel via `asyncio.gather()` with configurable concurrency limits
+- [x] **Caching layer** — `CachingAdapter` wraps any adapter to cache LLM responses keyed by `(prompt, system, model)` for deterministic re-runs
+- [x] **New assertion types**
   - `tool_call_count` — Assert exact/min/max number of tool calls
   - `output_not_contains` — Assert absence of content (safety checks)
   - `cost_under` — Assert cost under threshold (token pricing config)
   - `output_length_between` — Min/max output length in chars/tokens
-- [ ] **Spec composition** — `!include` YAML tag or `$ref` mechanism to import tests from other files
+- [x] **Spec composition** — `!include` YAML tag to import tests from other files
 
 ## Tier 5 — Quality of life
 
