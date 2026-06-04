@@ -242,8 +242,10 @@ class TestImportError:
 
         with mock.patch.object(builtins, "__import__", _mock_import):
             importlib.reload(mod)
-            assert mod.HumanMessage is None
-            assert mod.SystemMessage is None
+            assert mod.HumanMessage is not None
+            assert mod.SystemMessage is not None
+            msg = mod.HumanMessage("test")
+            assert msg.content == "test"
 
         importlib.reload(mod)
 

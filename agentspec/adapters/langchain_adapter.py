@@ -9,8 +9,13 @@ from agentspec.adapters.base import AgentAdapter, AgentResponse, ToolCall
 try:  # ruff: isort: skip
     from langchain_core.messages import HumanMessage, SystemMessage
 except ImportError:
-    HumanMessage = None
-    SystemMessage = None
+
+    class _FallbackMessage:
+        def __init__(self, content: str) -> None:
+            self.content = content
+
+    HumanMessage = _FallbackMessage
+    SystemMessage = _FallbackMessage
 
 
 @dataclass
@@ -39,8 +44,8 @@ class LangChainAdapter(AgentAdapter):
     ) -> AgentResponse:
         messages: list = []
         if system_prompt:
-            messages.append(SystemMessage(content=system_prompt))  # pyright: ignore
-        messages.append(HumanMessage(content=prompt))  # pyright: ignore
+            messages.append(SystemMessage(content=system_prompt))
+        messages.append(HumanMessage(content=prompt))
 
         kwargs: dict[str, Any] = {}
         resolved_model = model or self.config.model
