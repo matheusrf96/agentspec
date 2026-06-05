@@ -12,32 +12,26 @@ RESULTS_DIR = Path.home() / ".agentspec" / "results"
 
 class ResultsBackend(ABC):
     @abstractmethod
-    def save_result(self, report: dict, spec_path: str | None = None) -> dict:
-        ...
+    def save_result(self, report: dict, spec_path: str | None = None) -> dict: ...
 
     @abstractmethod
     def list_runs(
         self, limit: int | None = None, spec_name: str | None = None
-    ) -> dict:
-        ...
+    ) -> dict: ...
 
     @abstractmethod
-    def get_run(self, run_id: str) -> dict:
-        ...
+    def get_run(self, run_id: str) -> dict: ...
 
     @abstractmethod
-    def compare_runs(self, id1: str, id2: str) -> dict:
-        ...
+    def compare_runs(self, id1: str, id2: str) -> dict: ...
 
     @abstractmethod
     def get_trends(
         self, spec_name: str | None = None, days: int | None = None
-    ) -> dict:
-        ...
+    ) -> dict: ...
 
     @abstractmethod
-    def prune_runs(self, keep: int = 50, spec_name: str | None = None) -> dict:
-        ...
+    def prune_runs(self, keep: int = 50, spec_name: str | None = None) -> dict: ...
 
 
 class JsonFileBackend(ResultsBackend):
@@ -94,9 +88,7 @@ class JsonFileBackend(ResultsBackend):
 
         return {"run_id": run_id}
 
-    def list_runs(
-        self, limit: int | None = None, spec_name: str | None = None
-    ) -> dict:
+    def list_runs(self, limit: int | None = None, spec_name: str | None = None) -> dict:
         index = self._load_index()
         runs = index.get("runs", [])
         if spec_name:
@@ -161,9 +153,7 @@ class JsonFileBackend(ResultsBackend):
             "summary2": report2.get("summary"),
         }
 
-    def get_trends(
-        self, spec_name: str | None = None, days: int | None = None
-    ) -> dict:
+    def get_trends(self, spec_name: str | None = None, days: int | None = None) -> dict:
         from datetime import timedelta
 
         index = self._load_index()
@@ -312,9 +302,7 @@ class SqliteBackend(ResultsBackend):
 
         return {"run_id": run_id}
 
-    def list_runs(
-        self, limit: int | None = None, spec_name: str | None = None
-    ) -> dict:
+    def list_runs(self, limit: int | None = None, spec_name: str | None = None) -> dict:
         with self._conn() as conn:
             query = (
                 "SELECT run_id, spec_name, spec_path, timestamp,"
@@ -404,15 +392,11 @@ class SqliteBackend(ResultsBackend):
             "summary2": report2.get("summary"),
         }
 
-    def get_trends(
-        self, spec_name: str | None = None, days: int | None = None
-    ) -> dict:
+    def get_trends(self, spec_name: str | None = None, days: int | None = None) -> dict:
         from datetime import timedelta
 
         with self._conn() as conn:
-            query = (
-                "SELECT timestamp, total, passed, failed, errors FROM runs"
-            )
+            query = "SELECT timestamp, total, passed, failed, errors FROM runs"
             params: list = []
             conditions = []
             if spec_name:
@@ -497,9 +481,9 @@ class SqliteBackend(ResultsBackend):
                 removed_ids,
             )
 
-            remaining = conn.execute(
-                "SELECT COUNT(*) as cnt FROM runs"
-            ).fetchone()["cnt"]
+            remaining = conn.execute("SELECT COUNT(*) as cnt FROM runs").fetchone()[
+                "cnt"
+            ]
 
         return {"removed": len(removed_ids), "remaining": remaining}
 

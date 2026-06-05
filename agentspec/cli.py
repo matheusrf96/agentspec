@@ -79,7 +79,11 @@ def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_pr
                 progress.advance(task_id)
 
         return await _run_spec(
-            path, model, base_url, api_key, concurrency,
+            path,
+            model,
+            base_url,
+            api_key,
+            concurrency,
             progress_callback=_progress if not no_progress else None,
         )
 
@@ -131,7 +135,11 @@ def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_pr
                     progress.advance(task)
 
                 return await _run_spec(
-                    spec_path, model, base_url, api_key, concurrency,
+                    spec_path,
+                    model,
+                    base_url,
+                    api_key,
+                    concurrency,
                     progress_callback=_progress if not no_progress else None,
                 )
 
@@ -240,9 +248,7 @@ def list_specs(path):
     for f in yaml_files:
         try:
             spec = Spec.from_yaml(str(f))
-            click.echo(
-                f"  {f.name}  name={spec.name}  tests={len(spec.tests)}"
-            )
+            click.echo(f"  {f.name}  name={spec.name}  tests={len(spec.tests)}")
         except Exception as e:
             click.echo(f"  {f.name}  [invalid: {e}]")
 

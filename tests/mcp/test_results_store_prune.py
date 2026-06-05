@@ -10,9 +10,27 @@ SAMPLE_REPORT = {
     "spec_name": "Test Spec",
     "summary": {"total": 3, "passed": 2, "failed": 1, "errors": 0, "pass_rate": 0.6667},
     "results": [
-        {"name": "t1", "passed": True, "error": None, "latency_seconds": 0.5, "assertion_results": []},  # noqa: E501
-        {"name": "t2", "passed": True, "error": None, "latency_seconds": 1.0, "assertion_results": []},  # noqa: E501
-        {"name": "t3", "passed": False, "error": None, "latency_seconds": 2.0, "assertion_results": []},  # noqa: E501
+        {
+            "name": "t1",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 0.5,
+            "assertion_results": [],
+        },  # noqa: E501
+        {
+            "name": "t2",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 1.0,
+            "assertion_results": [],
+        },  # noqa: E501
+        {
+            "name": "t3",
+            "passed": False,
+            "error": None,
+            "latency_seconds": 2.0,
+            "assertion_results": [],
+        },  # noqa: E501
     ],
 }
 
@@ -49,7 +67,9 @@ class TestPruneRuns:
         prune_runs(keep=2)
         for rid in run_ids[:3]:
             run_file = tmp_results_dir / f"{rid}.json"
-            assert not run_file.exists(), f"Run file {rid}.json should have been removed"  # noqa: E501
+            assert not run_file.exists(), (
+                f"Run file {rid}.json should have been removed"
+            )  # noqa: E501
         for rid in run_ids[3:]:
             run_file = tmp_results_dir / f"{rid}.json"
             assert run_file.exists(), f"Run file {rid}.json should still exist"

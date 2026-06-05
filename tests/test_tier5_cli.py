@@ -18,6 +18,7 @@ def runner():
 @pytest.fixture
 def sample_spec_dir():
     import yaml
+
     with tempfile.TemporaryDirectory() as tmp:
         spec = {
             "name": "Test Spec",
@@ -234,10 +235,13 @@ class TestRunProgressFlag:
     @patch("agentspec.cli.os.getenv")
     @patch("agentspec.cli.OpenAICompatibleAdapter")
     @patch("agentspec.cli.TestRunner")
-    def test_run_with_no_progress(self, mock_runner_cls, mock_adapter_cls, mock_getenv, runner):  # noqa: E501
+    def test_run_with_no_progress(
+        self, mock_runner_cls, mock_adapter_cls, mock_getenv, runner
+    ):  # noqa: E501
         from unittest.mock import AsyncMock
 
         import yaml
+
         mock_getenv.return_value = "sk-test-key"
         mock_runner = mock_runner_cls.return_value
         mock_runner.run_all = AsyncMock()
@@ -253,7 +257,15 @@ class TestRunProgressFlag:
         mock_report.results = []
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            yaml.dump({"name": "Test", "model": "gpt-4", "system_prompt": "test", "tests": []}, f)  # noqa: E501
+            yaml.dump(
+                {
+                    "name": "Test",
+                    "model": "gpt-4",
+                    "system_prompt": "test",
+                    "tests": [],
+                },
+                f,
+            )  # noqa: E501
             path = f.name
 
         result = runner.invoke(main, ["run", path, "--no-progress"])

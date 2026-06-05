@@ -10,9 +10,27 @@ SAMPLE_REPORT = {
     "spec_name": "Test Spec",
     "summary": {"total": 3, "passed": 2, "failed": 1, "errors": 0, "pass_rate": 0.6667},
     "results": [
-        {"name": "pass1", "passed": True, "error": None, "latency_seconds": 0.5, "assertion_results": []},  # noqa: E501
-        {"name": "pass2", "passed": True, "error": None, "latency_seconds": 1.0, "assertion_results": []},  # noqa: E501
-        {"name": "fail1", "passed": False, "error": None, "latency_seconds": 2.0, "assertion_results": []},  # noqa: E501
+        {
+            "name": "pass1",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 0.5,
+            "assertion_results": [],
+        },  # noqa: E501
+        {
+            "name": "pass2",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 1.0,
+            "assertion_results": [],
+        },  # noqa: E501
+        {
+            "name": "fail1",
+            "passed": False,
+            "error": None,
+            "latency_seconds": 2.0,
+            "assertion_results": [],
+        },  # noqa: E501
     ],
 }
 
@@ -20,9 +38,27 @@ SAMPLE_REPORT_2 = {
     "spec_name": "Test Spec",
     "summary": {"total": 3, "passed": 3, "failed": 0, "errors": 0, "pass_rate": 1.0},
     "results": [
-        {"name": "pass1", "passed": True, "error": None, "latency_seconds": 0.4, "assertion_results": []},  # noqa: E501
-        {"name": "pass2", "passed": True, "error": None, "latency_seconds": 0.8, "assertion_results": []},  # noqa: E501
-        {"name": "fail1", "passed": True, "error": None, "latency_seconds": 1.5, "assertion_results": []},  # noqa: E501
+        {
+            "name": "pass1",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 0.4,
+            "assertion_results": [],
+        },  # noqa: E501
+        {
+            "name": "pass2",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 0.8,
+            "assertion_results": [],
+        },  # noqa: E501
+        {
+            "name": "fail1",
+            "passed": True,
+            "error": None,
+            "latency_seconds": 1.5,
+            "assertion_results": [],
+        },  # noqa: E501
     ],
 }
 
