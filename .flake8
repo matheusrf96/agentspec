@@ -1,6 +1,6 @@
 [flake8]
 max-line-length = 88
 extend-exclude = .opencode,opencode.json,.git,__pycache__,.pytest_cache,.ruff_cache,.coverage
-ignore = W503,W504
+ignore = W503,W504,E704
 per-file-ignores =
     __init__.py: F401
