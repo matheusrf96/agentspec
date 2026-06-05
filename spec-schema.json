@@ -1,0 +1,574 @@
+{
+  "$defs": {
+    "CannedResponse": {
+      "properties": {
+        "prompt_contains": {
+          "title": "Prompt Contains",
+          "type": "string"
+        },
+        "output": {
+          "default": "",
+          "title": "Output",
+          "type": "string"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "prompt_contains"
+      ],
+      "title": "CannedResponse",
+      "type": "object"
+    },
+    "ConversationEntry": {
+      "properties": {
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ConversationEntry",
+      "type": "object"
+    },
+    "CostUnderAssertion": {
+      "properties": {
+        "type": {
+          "const": "cost_under",
+          "default": "cost_under",
+          "title": "Type",
+          "type": "string"
+        },
+        "max_cost": {
+          "exclusiveMinimum": 0,
+          "title": "Max Cost",
+          "type": "number"
+        },
+        "input_price_per_token": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Price Per Token"
+        },
+        "output_price_per_token": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Price Per Token"
+        }
+      },
+      "required": [
+        "max_cost"
+      ],
+      "title": "CostUnderAssertion",
+      "type": "object"
+    },
+    "Fixtures": {
+      "properties": {
+        "conversation_history": {
+          "items": {
+            "$ref": "#/$defs/ConversationEntry"
+          },
+          "title": "Conversation History",
+          "type": "array"
+        },
+        "mock_tools": {
+          "items": {
+            "$ref": "#/$defs/MockTool"
+          },
+          "title": "Mock Tools",
+          "type": "array"
+        },
+        "canned_responses": {
+          "items": {
+            "$ref": "#/$defs/CannedResponse"
+          },
+          "title": "Canned Responses",
+          "type": "array"
+        }
+      },
+      "title": "Fixtures",
+      "type": "object"
+    },
+    "LatencyUnderAssertion": {
+      "properties": {
+        "type": {
+          "const": "latency_under",
+          "default": "latency_under",
+          "title": "Type",
+          "type": "string"
+        },
+        "max_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Max Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "max_seconds"
+      ],
+      "title": "LatencyUnderAssertion",
+      "type": "object"
+    },
+    "MockTool": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "response": {
+          "title": "Response",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "response"
+      ],
+      "title": "MockTool",
+      "type": "object"
+    },
+    "OutputContainsAnyAssertion": {
+      "properties": {
+        "type": {
+          "const": "output_contains_any",
+          "default": "output_contains_any",
+          "title": "Type",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "array"
+        },
+        "match": {
+          "default": "any",
+          "enum": [
+            "any",
+            "all"
+          ],
+          "title": "Match",
+          "type": "string"
+        }
+      },
+      "required": [
+        "values"
+      ],
+      "title": "OutputContainsAnyAssertion",
+      "type": "object"
+    },
+    "OutputContainsAssertion": {
+      "properties": {
+        "type": {
+          "const": "output_contains",
+          "default": "output_contains",
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "case_sensitive": {
+          "default": true,
+          "title": "Case Sensitive",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "OutputContainsAssertion",
+      "type": "object"
+    },
+    "OutputJsonSchemaAssertion": {
+      "properties": {
+        "type": {
+          "const": "output_json_schema",
+          "default": "output_json_schema",
+          "title": "Type",
+          "type": "string"
+        },
+        "schema": {
+          "additionalProperties": true,
+          "title": "Schema",
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema"
+      ],
+      "title": "OutputJsonSchemaAssertion",
+      "type": "object"
+    },
+    "OutputLengthBetweenAssertion": {
+      "properties": {
+        "type": {
+          "const": "output_length_between",
+          "default": "output_length_between",
+          "title": "Type",
+          "type": "string"
+        },
+        "min_length": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Length"
+        },
+        "max_length": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Length"
+        },
+        "unit": {
+          "default": "chars",
+          "enum": [
+            "chars",
+            "tokens"
+          ],
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "title": "OutputLengthBetweenAssertion",
+      "type": "object"
+    },
+    "OutputMatchesAssertion": {
+      "properties": {
+        "type": {
+          "const": "output_matches",
+          "default": "output_matches",
+          "title": "Type",
+          "type": "string"
+        },
+        "pattern": {
+          "title": "Pattern",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pattern"
+      ],
+      "title": "OutputMatchesAssertion",
+      "type": "object"
+    },
+    "OutputNotContainsAssertion": {
+      "properties": {
+        "type": {
+          "const": "output_not_contains",
+          "default": "output_not_contains",
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "case_sensitive": {
+          "default": true,
+          "title": "Case Sensitive",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "OutputNotContainsAssertion",
+      "type": "object"
+    },
+    "TestCase": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "assertions": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ToolCalledAssertion"
+              },
+              {
+                "$ref": "#/$defs/OutputContainsAssertion"
+              },
+              {
+                "$ref": "#/$defs/OutputContainsAnyAssertion"
+              },
+              {
+                "$ref": "#/$defs/OutputMatchesAssertion"
+              },
+              {
+                "$ref": "#/$defs/LatencyUnderAssertion"
+              },
+              {
+                "$ref": "#/$defs/OutputJsonSchemaAssertion"
+              },
+              {
+                "$ref": "#/$defs/ToolCallCountAssertion"
+              },
+              {
+                "$ref": "#/$defs/OutputNotContainsAssertion"
+              },
+              {
+                "$ref": "#/$defs/CostUnderAssertion"
+              },
+              {
+                "$ref": "#/$defs/OutputLengthBetweenAssertion"
+              }
+            ]
+          },
+          "title": "Assertions",
+          "type": "array"
+        },
+        "context": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context"
+        }
+      },
+      "required": [
+        "name",
+        "prompt"
+      ],
+      "title": "TestCase",
+      "type": "object"
+    },
+    "ToolCallCountAssertion": {
+      "properties": {
+        "type": {
+          "const": "tool_call_count",
+          "default": "tool_call_count",
+          "title": "Type",
+          "type": "string"
+        },
+        "exact": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exact"
+        },
+        "min_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Count"
+        },
+        "max_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Count"
+        }
+      },
+      "title": "ToolCallCountAssertion",
+      "type": "object"
+    },
+    "ToolCalledAssertion": {
+      "properties": {
+        "type": {
+          "const": "tool_called",
+          "default": "tool_called",
+          "title": "Type",
+          "type": "string"
+        },
+        "tool_name": {
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "args": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Args"
+        }
+      },
+      "required": [
+        "tool_name"
+      ],
+      "title": "ToolCalledAssertion",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "model": {
+      "default": "deepseek-v4-pro",
+      "title": "Model",
+      "type": "string"
+    },
+    "system_prompt": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "System Prompt"
+    },
+    "tests": {
+      "items": {
+        "$ref": "#/$defs/TestCase"
+      },
+      "title": "Tests",
+      "type": "array"
+    },
+    "fixtures": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Fixtures"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "title": "AgentSpec Evaluation Spec",
+  "type": "object",
+  "$id": "https://agentspec.dev/spec-schema.json",
+  "description": "JSON Schema for AgentSpec evaluation spec files"
+}

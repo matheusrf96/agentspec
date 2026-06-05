@@ -31,13 +31,16 @@
   - `output_length_between` — Min/max output length in chars/tokens
 - [x] **Spec composition** — `!include` YAML tag to import tests from other files
 
-## Tier 5 — Quality of life
+## Tier 5 — Quality of life ✅
 
-- [ ] **CLI improvements**
+- [x] **CLI improvements**
   - `agentspec list [path]` — List specs in a directory
   - `agentspec compare <id1> <id2>` — Compare two runs
-  - `agentspec results prune` — Remove old runs
-  - `agentspec results export` — Export as CSV
-  - Tab completion, progress bar on `run`
-- [ ] **VSCode JSON Schema** — Publish a JSON Schema for spec YAML files enabling autocomplete and validation
-- [ ] **Results store backends** — SQLite backend option alongside the current JSON file storage
+  - `agentspec results prune` — Keep only the N most recent runs
+  - `agentspec results export` — Export runs as CSV
+  - `agentspec results history` — Show recent run list
+  - `agentspec results get <id>` — Show full run details
+  - `agentspec completion <shell>` — Print tab completion script
+  - Progress bar on `run` (use `--no-progress` to disable)
+- [x] **VSCode JSON Schema** — `spec-schema.json` generated from Pydantic models; enables autocomplete and validation in editors
+- [x] **Results store backends** — `JsonFileBackend` (default) and `SqliteBackend` via `results_backend.py`
