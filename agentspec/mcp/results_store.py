@@ -183,6 +183,36 @@ def get_trends(spec_name: str | None = None, days: int | None = None) -> dict:
     return {"trends": trend_data, "total_runs": len(runs)}
 
 
+def prune_runs(keep: int = 50, spec_name: str | None = None) -> dict:
+    """Remove old runs, keeping the most recent `keep` runs."""
+    index = _load_index()
+    runs = index.get("runs", [])
+
+    if spec_name:
+        filtered = [r for r in runs if r.get("spec_name") == spec_name]
+        others = [r for r in runs if r.get("spec_name") != spec_name]
+    else:
+        filtered = list(runs)
+        others = []
+
+    if len(filtered) <= keep:
+        return {"removed": 0, "remaining": len(runs)}
+
+    to_keep = filtered[:keep]
+    to_remove = filtered[keep:]
+
+    removed_ids = {r["run_id"] for r in to_remove}
+    for rid in removed_ids:
+        run_file = RESULTS_DIR / f"{rid}.json"
+        if run_file.exists():
+            run_file.unlink()
+
+    index["runs"] = others + to_keep
+    _save_index(index)
+
+    return {"removed": len(to_remove), "remaining": len(index["runs"])}
+
+
 def _parse_iso(ts: str) -> datetime:
     try:
         return datetime.fromisoformat(ts)
@@ -257,6 +287,24 @@ def _build_server() -> BaseMcpServer:
             "required": ["id1", "id2"],
         },
     )(compare_runs)
+
+    srv.tool(
+        "prune_runs",
+        description="Remove old evaluation runs, keeping the most recent N.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "keep": {
+                    "type": "integer",
+                    "description": "Number of recent runs to keep",
+                },
+                "spec_name": {
+                    "type": "string",
+                    "description": "Filter by spec name",
+                },
+            },
+        },
+    )(prune_runs)
 
     srv.tool(
         "get_trends",
