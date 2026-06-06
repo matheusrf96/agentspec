@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from agentspec.spec import Spec
 
 
@@ -154,3 +157,13 @@ tests:
     spec = Spec.from_yaml(str(spec_file))
     assert len(spec.tests) == 1
     assert spec.tests[0].name == "Local"
+
+
+def test_spec_schema_matches_pydantic():
+    schema_file = Path("spec-schema.json")
+    if not schema_file.exists():
+        return
+    with open(schema_file) as f:
+        on_disk = json.load(f)
+    generated = Spec.model_json_schema()
+    assert on_disk == generated

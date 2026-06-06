@@ -567,8 +567,6 @@
   "required": [
     "name"
   ],
-  "title": "AgentSpec Evaluation Spec",
-  "type": "object",
-  "$id": "https://agentspec.dev/spec-schema.json",
-  "description": "JSON Schema for AgentSpec evaluation spec files"
+  "title": "Spec",
+  "type": "object"
 }
