@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from agentspec.mcp import results_store
 from agentspec.mcp.results_store import (
     compare_runs,
     get_run,
@@ -13,12 +14,26 @@ from agentspec.mcp.results_store import (
     save_result,
 )
 
-_RESULT = {"passed": True, "error": None, "assertion_results": []}
-_RESULT_FAIL = {"passed": False, "error": None, "assertion_results": []}
+_RESULT = {
+    "passed": True,
+    "error": None,
+    "assertion_results": [],
+}
+_RESULT_FAIL = {
+    "passed": False,
+    "error": None,
+    "assertion_results": [],
+}
 
 SAMPLE_REPORT = {
     "spec_name": "Test Spec",
-    "summary": {"total": 3, "passed": 2, "failed": 1, "errors": 0, "pass_rate": 0.6667},
+    "summary": {
+        "total": 3,
+        "passed": 2,
+        "failed": 1,
+        "errors": 0,
+        "pass_rate": 0.6667,
+    },
     "results": [
         {"name": "pass1", **_RESULT, "latency_seconds": 0.5},
         {"name": "pass2", **_RESULT, "latency_seconds": 1.0},
@@ -28,7 +43,13 @@ SAMPLE_REPORT = {
 
 SAMPLE_REPORT_2 = {
     "spec_name": "Test Spec",
-    "summary": {"total": 3, "passed": 3, "failed": 0, "errors": 0, "pass_rate": 1.0},
+    "summary": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "pass_rate": 1.0,
+    },
     "results": [
         {"name": "pass1", **_RESULT, "latency_seconds": 0.4},
         {"name": "pass2", **_RESULT, "latency_seconds": 0.8},
@@ -38,19 +59,25 @@ SAMPLE_REPORT_2 = {
 
 
 @pytest.fixture(autouse=True)
+def _reset_backend():
+    results_store._backend = None
+    yield
+    results_store._backend = None
+
+
+@pytest.fixture(autouse=True)
 def tmp_results_dir(tmp_path):
     test_dir = tmp_path / ".agentspec" / "results"
     test_dir.mkdir(parents=True)
-    with patch("agentspec.mcp.results_store.RESULTS_DIR", test_dir):
-        with patch("agentspec.mcp.results_store.INDEX_FILE", test_dir / "index.json"):
-            yield test_dir
+    with patch("agentspec.results_backend.RESULTS_DIR", test_dir):
+        yield test_dir
 
 
 class TestSaveResult:
     def test_saves_result_and_returns_run_id(self, tmp_results_dir):
         result = save_result(SAMPLE_REPORT)
         assert "run_id" in result
-        assert len(result["run_id"]) == 12
+        assert len(result["run_id"]) == 16
 
     def test_creates_run_file(self, tmp_results_dir):
         result = save_result(SAMPLE_REPORT, spec_path="/path/to/spec.yaml")
@@ -118,7 +145,7 @@ class TestGetRun:
         assert result["report"]["spec_name"] == "Test Spec"
 
     def test_run_not_found(self, tmp_results_dir):
-        result = get_run("nonexistent")
+        result = get_run("a" * 16)
         assert "error" in result
         assert "not found" in result["error"].lower()
 
@@ -131,7 +158,7 @@ class TestCompareRuns:
         assert "error" not in result
         assert len(result["differences"]) > 0
         diff_names = [d["test_name"] for d in result["differences"]]
-        assert "fail1" in diff_names  # went from fail to pass
+        assert "fail1" in diff_names
 
     def test_runs_with_no_changes(self, tmp_results_dir):
         id1 = save_result(SAMPLE_REPORT)["run_id"]
@@ -141,7 +168,7 @@ class TestCompareRuns:
 
     def test_missing_run_returns_error(self, tmp_results_dir):
         saved = save_result(SAMPLE_REPORT)
-        result = compare_runs(saved["run_id"], "nonexistent")
+        result = compare_runs(saved["run_id"], "a" * 16)
         assert "error" in result
 
 
@@ -185,52 +212,63 @@ class TestBuildServer:
 
 
 class TestResultsStoreEdgeCases:
-    def test_get_run_not_found(self):
-        from agentspec.mcp.results_store import get_run
-
-        result = get_run("nonexistent-id")
+    def test_get_run_not_found(self, tmp_results_dir):
+        result = get_run("a" * 16)
         assert "error" in result
 
-    def test_list_runs_empty(self):
-        from agentspec.mcp.results_store import list_runs
+    def test_get_run_invalid_id(self, tmp_results_dir):
+        result = get_run("../../etc/passwd")
+        assert "error" in result
+        assert "Invalid" in result["error"]
 
+    def test_list_runs_empty(self, tmp_results_dir):
         result = list_runs()
         assert result is not None
 
-    def test_get_trends_no_data(self):
-        from agentspec.mcp.results_store import get_trends
-
+    def test_get_trends_no_data(self, tmp_results_dir):
         result = get_trends(spec_name="nonexistent", days=7)
         assert result is not None
 
-    def test_get_trends_invalid_days(self):
-        from agentspec.mcp.results_store import get_trends
-
+    def test_get_trends_invalid_days(self, tmp_results_dir):
         result = get_trends(spec_name="test", days=0)
         assert result is not None
 
-    def test_compare_runs_both_missing(self):
-        from agentspec.mcp.results_store import compare_runs
-
-        result = compare_runs("id1", "id2")
+    def test_compare_runs_both_missing(self, tmp_results_dir):
+        result = compare_runs("a" * 16, "b" * 16)
         assert "error" in result
 
 
 class TestResultsStorePersistence:
-    def test_save_and_list_run(self):
-        from agentspec.mcp.results_store import save_result
-
-        summary = {"total": 1, "passed": 1, "failed": 0, "errors": 0, "pass_rate": 1.0}
-        report = {"spec_name": "test-spec", "summary": summary, "results": []}
+    def test_save_and_list_run(self, tmp_results_dir):
+        summary = {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "pass_rate": 1.0,
+        }
+        report = {
+            "spec_name": "test-spec",
+            "summary": summary,
+            "results": [],
+        }
         run_id = save_result(report)
         assert "run_id" in run_id
         assert run_id["run_id"] is not None
 
-    def test_save_and_get_run(self):
-        from agentspec.mcp.results_store import get_run, save_result
-
-        summary = {"total": 1, "passed": 1, "failed": 0, "errors": 0, "pass_rate": 1.0}
-        report = {"spec_name": "test-spec-2", "summary": summary, "results": []}
+    def test_save_and_get_run(self, tmp_results_dir):
+        summary = {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "pass_rate": 1.0,
+        }
+        report = {
+            "spec_name": "test-spec-2",
+            "summary": summary,
+            "results": [],
+        }
         saved = save_result(report)
         retrieved = get_run(saved["run_id"])
         assert "error" not in retrieved

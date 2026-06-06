@@ -8,7 +8,13 @@ from agentspec.results_backend import JsonFileBackend, SqliteBackend
 
 SAMPLE_REPORT = {
     "spec_name": "Test Spec",
-    "summary": {"total": 3, "passed": 2, "failed": 1, "errors": 0, "pass_rate": 0.6667},
+    "summary": {
+        "total": 3,
+        "passed": 2,
+        "failed": 1,
+        "errors": 0,
+        "pass_rate": 0.6667,
+    },
     "results": [
         {
             "name": "pass1",
@@ -16,27 +22,33 @@ SAMPLE_REPORT = {
             "error": None,
             "latency_seconds": 0.5,
             "assertion_results": [],
-        },  # noqa: E501
+        },
         {
             "name": "pass2",
             "passed": True,
             "error": None,
             "latency_seconds": 1.0,
             "assertion_results": [],
-        },  # noqa: E501
+        },
         {
             "name": "fail1",
             "passed": False,
             "error": None,
             "latency_seconds": 2.0,
             "assertion_results": [],
-        },  # noqa: E501
+        },
     ],
 }
 
 SAMPLE_REPORT_2 = {
     "spec_name": "Test Spec",
-    "summary": {"total": 3, "passed": 3, "failed": 0, "errors": 0, "pass_rate": 1.0},
+    "summary": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "errors": 0,
+        "pass_rate": 1.0,
+    },
     "results": [
         {
             "name": "pass1",
@@ -44,21 +56,21 @@ SAMPLE_REPORT_2 = {
             "error": None,
             "latency_seconds": 0.4,
             "assertion_results": [],
-        },  # noqa: E501
+        },
         {
             "name": "pass2",
             "passed": True,
             "error": None,
             "latency_seconds": 0.8,
             "assertion_results": [],
-        },  # noqa: E501
+        },
         {
             "name": "fail1",
             "passed": True,
             "error": None,
             "latency_seconds": 1.5,
             "assertion_results": [],
-        },  # noqa: E501
+        },
     ],
 }
 
@@ -75,6 +87,7 @@ class TestJsonFileBackend:
     def test_save_and_get_run(self):
         saved = self.backend.save_result(SAMPLE_REPORT)
         assert "run_id" in saved
+        assert len(saved["run_id"]) == 16
         result = self.backend.get_run(saved["run_id"])
         assert "error" not in result
         assert result["report"]["spec_name"] == "Test Spec"
@@ -106,8 +119,13 @@ class TestJsonFileBackend:
         assert result["remaining"] == 2
 
     def test_run_not_found(self):
-        result = self.backend.get_run("nonexistent")
+        result = self.backend.get_run("a" * 16)
         assert "error" in result
+
+    def test_invalid_run_id(self):
+        result = self.backend.get_run("../../etc/passwd")
+        assert "error" in result
+        assert "Invalid" in result["error"]
 
     def test_list_runs_empty(self):
         result = self.backend.list_runs()
@@ -122,6 +140,19 @@ class TestJsonFileBackend:
         assert len(result["runs"]) == 1
         assert result["runs"][0]["spec_name"] == "Other"
 
+    def test_corrupt_index_recovery(self, tmp_path):
+        test_dir = tmp_path / ".agentspec" / "results"
+        index_file = test_dir / "index.json"
+        index_file.write_text("{corrupt json")
+        backend = JsonFileBackend()
+        result = backend.list_runs()
+        assert result["runs"] == []
+
+    def test_get_trends_with_days(self):
+        self.backend.save_result(SAMPLE_REPORT)
+        result = self.backend.get_trends(days=7)
+        assert result["total_runs"] == 1
+
 
 class TestSqliteBackend:
     @pytest.fixture(autouse=True)
@@ -135,6 +166,7 @@ class TestSqliteBackend:
     def test_save_and_get_run(self):
         saved = self.backend.save_result(SAMPLE_REPORT)
         assert "run_id" in saved
+        assert len(saved["run_id"]) == 16
         result = self.backend.get_run(saved["run_id"])
         assert "error" not in result
         assert result["report"]["spec_name"] == "Test Spec"
@@ -166,8 +198,13 @@ class TestSqliteBackend:
         assert result["remaining"] == 2
 
     def test_run_not_found(self):
-        result = self.backend.get_run("nonexistent")
+        result = self.backend.get_run("a" * 16)
         assert "error" in result
+
+    def test_invalid_run_id(self):
+        result = self.backend.get_run("../../etc/passwd")
+        assert "error" in result
+        assert "Invalid" in result["error"]
 
     def test_list_runs_empty(self):
         result = self.backend.list_runs()
@@ -188,7 +225,7 @@ class TestSqliteBackend:
         assert "error" not in result
 
     def test_compare_missing_runs(self):
-        result = self.backend.compare_runs("id1", "id2")
+        result = self.backend.compare_runs("a" * 16, "b" * 16)
         assert "error" in result
 
     def test_prune_with_spec_filter(self):
@@ -212,3 +249,13 @@ class TestSqliteBackend:
             self.backend.save_result(SAMPLE_REPORT)
         result = self.backend.list_runs(limit=3)
         assert len(result["runs"]) == 3
+
+    def test_get_trends_with_days(self):
+        self.backend.save_result(SAMPLE_REPORT)
+        result = self.backend.get_trends(days=7)
+        assert result["total_runs"] == 1
+
+    def test_connection_reuse(self):
+        conn1 = self.backend._get_conn()
+        conn2 = self.backend._get_conn()
+        assert conn1 is conn2
