@@ -24,10 +24,6 @@ inputs:
         description: "Override API key (env: DEEPSEEK_API_KEY)"
         required: false
         default: ""
-    version:
-        description: "agentspec package version (default: latest)"
-        required: false
-        default: ""
 
 runs:
     using: "composite"

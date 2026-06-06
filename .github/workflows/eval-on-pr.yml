@@ -15,7 +15,7 @@ jobs:
             - name: Run AgentSpec eval
               uses: ./.github/actions/eval-spec
               with:
-                  spec-path: "examples/tool-calling.yaml"
+                  spec-path: "examples/"
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   api-key: ${{ secrets.DEEPSEEK_API_KEY }}
                   model: "deepseek-v4-pro"

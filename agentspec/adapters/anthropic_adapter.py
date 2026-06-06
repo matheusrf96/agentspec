@@ -105,9 +105,7 @@ class AnthropicAdapter(AgentAdapter):
             token_usage=token_usage,
         )
 
-    def _build_tools(  # type: ignore[return]
-        self, fixtures: dict | None = None
-    ) -> list[dict]:
+    def _build_tools(self, fixtures: dict | None = None) -> list[dict]:
         tools = []
         if fixtures:
             for mt in fixtures.get("mock_tools", []):
