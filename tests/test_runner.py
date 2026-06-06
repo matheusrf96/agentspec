@@ -6,7 +6,7 @@ import pytest
 
 from agentspec.adapters.base import AgentAdapter, AgentResponse
 from agentspec.runner import TestRunner
-from agentspec.spec import Spec
+from agentspec.spec import Spec, TestCase
 
 
 class _MockAdapter(AgentAdapter):
@@ -26,9 +26,9 @@ def spec():
     return Spec(
         name="test-spec",
         tests=[
-            {"name": "test-a", "prompt": "prompt-a", "assertions": []},
-            {"name": "test-b", "prompt": "prompt-b", "assertions": []},
-            {"name": "test-c", "prompt": "prompt-c", "assertions": []},
+            TestCase(name="test-a", prompt="prompt-a", assertions=[]),
+            TestCase(name="test-b", prompt="prompt-b", assertions=[]),
+            TestCase(name="test-c", prompt="prompt-c", assertions=[]),
         ],
     )
 
@@ -49,7 +49,7 @@ class TestSequential:
     async def test_single_test(self):
         spec = Spec(
             name="single",
-            tests=[{"name": "only", "prompt": "hello", "assertions": []}],
+            tests=[TestCase(name="only", prompt="hello", assertions=[])],
         )
         adapter = _MockAdapter()
         runner = TestRunner(spec, adapter)
@@ -102,9 +102,9 @@ class TestConcurrent:
         spec = Spec(
             name="err-spec",
             tests=[
-                {"name": "good-1", "prompt": "hello", "assertions": []},
-                {"name": "bad", "prompt": "fail-please", "assertions": []},
-                {"name": "good-2", "prompt": "world", "assertions": []},
+                TestCase(name="good-1", prompt="hello", assertions=[]),
+                TestCase(name="bad", prompt="fail-please", assertions=[]),
+                TestCase(name="good-2", prompt="world", assertions=[]),
             ],
         )
         adapter = _FailingAdapter()
@@ -116,3 +116,61 @@ class TestConcurrent:
         assert report.results[1].error is not None
         assert "Intentional error" in report.results[1].error
         assert report.results[2].passed is True
+
+    async def test_progress_callback_sequential(self, spec):
+        adapter = _MockAdapter(delay=0.01)
+        runner = TestRunner(spec, adapter, max_concurrency=1)
+        events: list[tuple[str, str]] = []
+
+        def cb(name: str, status: str):
+            events.append((name, status))
+
+        report = await runner.run_all(progress_callback=cb)
+
+        assert len(events) == 3
+        assert events[0] == ("test-a", "pass")
+        assert events[1] == ("test-b", "pass")
+        assert events[2] == ("test-c", "pass")
+        assert len(report.results) == 3
+
+    async def test_progress_callback_concurrent(self, spec):
+        adapter = _MockAdapter(delay=0.01)
+        runner = TestRunner(spec, adapter, max_concurrency=3)
+        events: list[tuple[str, str]] = []
+
+        def cb(name: str, status: str):
+            events.append((name, status))
+
+        report = await runner.run_all(progress_callback=cb)
+
+        assert len(events) == 3
+        assert len(report.results) == 3
+
+    async def test_progress_callback_with_errors(self):
+        class _FailingAdapter(AgentAdapter):
+            async def run(self, prompt, system_prompt=None, model=None, fixtures=None):
+                if "fail" in prompt:
+                    raise ValueError("err")
+                return AgentResponse(text="ok")
+
+        spec = Spec(
+            name="cb-err-spec",
+            tests=[
+                TestCase(name="good", prompt="hello", assertions=[]),
+                TestCase(name="bad", prompt="fail-now", assertions=[]),
+            ],
+        )
+        adapter = _FailingAdapter()
+        runner = TestRunner(spec, adapter, max_concurrency=2)
+        events: list[tuple[str, str]] = []
+
+        def cb(name: str, status: str):
+            events.append((name, status))
+
+        await runner.run_all(progress_callback=cb)
+
+        assert len(events) == 2
+        assert events[0][0] == "good"
+        assert events[0][1] == "pass"
+        assert events[1][0] == "bad"
+        assert events[1][1] == "error"

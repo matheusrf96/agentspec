@@ -23,6 +23,7 @@ dev = [
     "ruff>=0.15",
     "flake8>=7.0",
     "flake8-pyproject>=1.2",
+    "pyright>=1.1.300",
 ]
 langchain = [
     "langchain-core>=0.3",

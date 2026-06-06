@@ -249,6 +249,79 @@ class TestAddAssertion:
         result = add_assertion("/nonexistent.yaml", "t1", "tool_called", tool_name="x")
         assert result["ok"] is False
 
+    def test_adds_tool_call_count_exact_assertion(self, tmp_spec):
+        result = add_assertion(tmp_spec, "test1", "tool_call_count", exact=2)
+        assert result["ok"] is True
+        with open(tmp_spec) as f:
+            data = yaml.safe_load(f)
+        a = data["tests"][0]["assertions"][1]
+        assert a["type"] == "tool_call_count"
+        assert a["exact"] == 2
+
+    def test_adds_tool_call_count_min_max_assertion(self, tmp_spec):
+        result = add_assertion(
+            tmp_spec, "test1", "tool_call_count", min_count=1, max_count=5
+        )
+        assert result["ok"] is True
+        with open(tmp_spec) as f:
+            data = yaml.safe_load(f)
+        a = data["tests"][0]["assertions"][1]
+        assert a["type"] == "tool_call_count"
+        assert a["min_count"] == 1
+        assert a["max_count"] == 5
+
+    def test_adds_output_not_contains_assertion(self, tmp_spec):
+        result = add_assertion(
+            tmp_spec,
+            "test1",
+            "output_not_contains",
+            value="secret",
+            case_sensitive=True,
+        )
+        assert result["ok"] is True
+        with open(tmp_spec) as f:
+            data = yaml.safe_load(f)
+        a = data["tests"][0]["assertions"][1]
+        assert a["type"] == "output_not_contains"
+        assert a["value"] == "secret"
+        assert a["case_sensitive"] is True
+
+    def test_adds_cost_under_assertion(self, tmp_spec):
+        result = add_assertion(
+            tmp_spec,
+            "test1",
+            "cost_under",
+            max_cost=0.01,
+            input_price_per_token=0.000002,
+            output_price_per_token=0.000008,
+        )
+        assert result["ok"] is True
+        with open(tmp_spec) as f:
+            data = yaml.safe_load(f)
+        a = data["tests"][0]["assertions"][1]
+        assert a["type"] == "cost_under"
+        assert a["max_cost"] == 0.01
+        assert a["input_price_per_token"] == 0.000002
+        assert a["output_price_per_token"] == 0.000008
+
+    def test_adds_output_length_between_assertion(self, tmp_spec):
+        result = add_assertion(
+            tmp_spec,
+            "test1",
+            "output_length_between",
+            min_length=10,
+            max_length=500,
+            unit="tokens",
+        )
+        assert result["ok"] is True
+        with open(tmp_spec) as f:
+            data = yaml.safe_load(f)
+        a = data["tests"][0]["assertions"][1]
+        assert a["type"] == "output_length_between"
+        assert a["min_length"] == 10
+        assert a["max_length"] == 500
+        assert a["unit"] == "tokens"
+
 
 class TestRemoveTest:
     def test_removes_test(self, tmp_spec):
