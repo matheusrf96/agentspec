@@ -5,6 +5,7 @@ import csv
 import json
 import os
 from pathlib import Path
+from typing import Callable, Optional
 
 import click
 from rich.console import Console
@@ -38,11 +39,18 @@ console = Console()
 
 
 @click.group()
-def main():
+def main() -> None:
     pass
 
 
-def _run_spec(spec_path, model, base_url, api_key, concurrency, progress_callback=None):
+async def _run_spec(
+    spec_path: str,
+    model: Optional[str],
+    base_url: Optional[str],
+    api_key: Optional[str],
+    concurrency: int,
+    progress_callback: Optional[Callable[[str, str], None]] = None,
+) -> TestReport:
     spec = Spec.from_yaml(spec_path)
     config = AdapterConfig(
         api_key=api_key or os.getenv("DEEPSEEK_API_KEY", ""),
@@ -51,7 +59,7 @@ def _run_spec(spec_path, model, base_url, api_key, concurrency, progress_callbac
     )
     adapter = OpenAICompatibleAdapter(config)
     runner = TestRunner(spec, adapter, max_concurrency=concurrency)
-    return runner.run_all(progress_callback=progress_callback)
+    return await runner.run_all(progress_callback=progress_callback)
 
 
 @main.command()
@@ -59,7 +67,9 @@ def _run_spec(spec_path, model, base_url, api_key, concurrency, progress_callbac
 @click.option("--model", default=None, help="Override model")
 @click.option("--base-url", default=None, help="Override API base URL")
 @click.option(
-    "--api-key", default=None, help="Override API key (env: DEEPSEEK_API_KEY)"
+    "--api-key",
+    default=None,
+    help="Override API key (env: DEEPSEEK_API_KEY)",
 )
 @click.option("--verbose", "-v", is_flag=True, help="Show assertion details")
 @click.option("--concurrency", "-c", default=1, type=int, help="Max parallel tests")
@@ -70,33 +80,31 @@ def _run_spec(spec_path, model, base_url, api_key, concurrency, progress_callbac
     default="terminal",
 )
 @click.option("--no-progress", is_flag=True, help="Hide progress bar")
-def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_progress):
+def run(
+    spec_path: str,
+    model: Optional[str],
+    base_url: Optional[str],
+    api_key: Optional[str],
+    verbose: bool,
+    concurrency: int,
+    output: str,
+    no_progress: bool,
+) -> None:
     """Run agent evaluation against a spec file or directory of specs."""
 
-    async def _run_single(path, progress=None, task_id=None):
-        def _progress(name, status):
-            if progress and task_id is not None:
-                progress.advance(task_id)
-
-        return await _run_spec(
-            path,
-            model,
-            base_url,
-            api_key,
-            concurrency,
-            progress_callback=_progress if not no_progress else None,
-        )
-
-    async def _run_all():
+    async def _run_all() -> TestReport | ConsolidatedReport:
         if os.path.isdir(spec_path):
             yaml_files = sorted(
                 f for f in os.listdir(spec_path) if f.endswith((".yaml", ".yml"))
             )
             if not yaml_files:
-                click.echo(f"No .yaml files found in {spec_path}", err=True)
+                click.echo(
+                    f"No .yaml/.yml files found in {spec_path}",
+                    err=True,
+                )
                 raise click.Abort()
 
-            reports = []
+            reports: list[TestReport] = []
             total = len(yaml_files)
             with Progress(
                 SpinnerColumn(),
@@ -110,8 +118,20 @@ def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_pr
                 task = progress.add_task("Running specs...", total=total)
                 for fname in yaml_files:
                     full = os.path.join(spec_path, fname)
-                    report = await _run_single(full, progress, task)
-                    reports.append(report)
+                    try:
+                        report = await _run_spec(
+                            full,
+                            model,
+                            base_url,
+                            api_key,
+                            concurrency,
+                        )
+                        reports.append(report)
+                    except Exception as exc:
+                        click.echo(
+                            f"Error running {fname}: {exc}",
+                            err=True,
+                        )
                     progress.update(task, advance=1)
 
             return ConsolidatedReport(specs=reports)
@@ -128,10 +148,11 @@ def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_pr
                 disable=no_progress,
             ) as progress:
                 task = progress.add_task(
-                    f"Running {Path(spec_path).name}...", total=total_tests
+                    f"Running {Path(spec_path).name}...",
+                    total=total_tests,
                 )
 
-                def _progress(name, status):
+                def _progress(name: str, status: str) -> None:
                     progress.advance(task)
 
                 return await _run_spec(
@@ -140,7 +161,7 @@ def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_pr
                     base_url,
                     api_key,
                     concurrency,
-                    progress_callback=_progress if not no_progress else None,
+                    progress_callback=(_progress if not no_progress else None),
                 )
 
     report = asyncio.run(_run_all())
@@ -152,11 +173,10 @@ def run(spec_path, model, base_url, api_key, verbose, concurrency, output, no_pr
         )
     )
     reporter.render(report)
-    _auto_save(report)
+    _auto_save(report, verbose)
 
 
-def _auto_save(report):
-    """Save report to results store for later retrieval."""
+def _auto_save(report: TestReport | ConsolidatedReport, verbose: bool = False) -> None:
     try:
         if isinstance(report, ConsolidatedReport):
             for r in report.specs:
@@ -165,8 +185,9 @@ def _auto_save(report):
         else:
             d = _report_to_dict(report)
             save_result(d)
-    except Exception:
-        pass
+    except Exception as exc:
+        if verbose:
+            click.echo(f"Warning: auto-save failed: {exc}", err=True)
 
 
 def _report_to_dict(report: TestReport) -> dict:
@@ -180,7 +201,11 @@ def _report_to_dict(report: TestReport) -> dict:
                 "latency_seconds": r.latency_seconds,
                 "token_usage": r.token_usage,
                 "assertion_results": [
-                    {"name": a.name, "passed": a.passed, "reason": a.reason}
+                    {
+                        "name": a.name,
+                        "passed": a.passed,
+                        "reason": a.reason,
+                    }
                     for a in r.assertion_results
                 ],
             }
@@ -200,7 +225,7 @@ def _report_to_dict(report: TestReport) -> dict:
 
 @main.command()
 @click.argument("spec_file", type=click.Path(exists=True))
-def validate(spec_file):
+def validate(spec_file: str) -> None:
     """Validate a spec file without running it."""
     try:
         spec = Spec.from_yaml(spec_file)
@@ -212,8 +237,12 @@ def validate(spec_file):
 
 @main.command()
 @click.option("--name", default="My Agent Eval", help="Spec name")
-@click.option("--model", default="deepseek-v4-pro", help="Default model")
-def init(name, model):
+@click.option(
+    "--model",
+    default="deepseek-v4-pro",
+    help="Default model",
+)
+def init(name: str, model: str) -> None:
     """Generate a template spec.yaml file."""
     template = (
         "# Agent Evaluation Spec\n"
@@ -234,13 +263,13 @@ def init(name, model):
 
 @main.command()
 @click.argument("path", default=".", type=click.Path(exists=True))
-def list_specs(path):
+def list_specs(path: str) -> None:
     """List spec files in a directory."""
     spec_dir = Path(path)
     if spec_dir.is_file():
         spec_dir = spec_dir.parent
 
-    yaml_files = sorted(spec_dir.glob("*.yaml")) + sorted(spec_dir.glob("*.yml"))
+    yaml_files = sorted(f for f in spec_dir.iterdir() if f.suffix in (".yaml", ".yml"))
     if not yaml_files:
         click.echo(f"No spec files found in {spec_dir}")
         return
@@ -256,8 +285,13 @@ def list_specs(path):
 @main.command()
 @click.argument("id1", type=str)
 @click.argument("id2", type=str)
-@click.option("--verbose", "-v", is_flag=True, help="Show detailed diff")
-def compare(id1, id2, verbose):
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Show detailed diff",
+)
+def compare(id1: str, id2: str, verbose: bool) -> None:
     """Compare two evaluation runs by their run IDs."""
     result = _compare_runs(id1, id2)
     if "error" in result:
@@ -277,11 +311,13 @@ def compare(id1, id2, verbose):
     click.echo()
 
     click.echo(
-        f"  Summary 1: {s1.get('passed', 0)}/{s1.get('total', 0)} passed"
+        f"  Summary 1:"
+        f" {s1.get('passed', 0)}/{s1.get('total', 0)} passed"
         f" ({s1.get('pass_rate', 0) * 100:.0f}%)"
     )
     click.echo(
-        f"  Summary 2: {s2.get('passed', 0)}/{s2.get('total', 0)} passed"
+        f"  Summary 2:"
+        f" {s2.get('passed', 0)}/{s2.get('total', 0)} passed"
         f" ({s2.get('pass_rate', 0) * 100:.0f}%)"
     )
     click.echo()
@@ -297,14 +333,24 @@ def compare(id1, id2, verbose):
 
 
 @main.group()
-def results():
+def results() -> None:
     """Manage evaluation results."""
 
 
 @results.command()
-@click.option("--keep", default=50, type=int, help="Number of recent runs to keep")
-@click.option("--spec", "spec_name", default=None, help="Filter by spec name")
-def prune(keep, spec_name):
+@click.option(
+    "--keep",
+    default=50,
+    type=int,
+    help="Number of recent runs to keep",
+)
+@click.option(
+    "--spec",
+    "spec_name",
+    default=None,
+    help="Filter by spec name",
+)
+def prune(keep: int, spec_name: Optional[str]) -> None:
     """Remove old evaluation runs, keeping the most recent ones."""
     result = prune_runs(keep=keep, spec_name=spec_name)
     click.echo(
@@ -315,10 +361,38 @@ def prune(keep, spec_name):
 
 @results.command()
 @click.argument("output", type=click.Path())
-@click.option("--spec", "spec_name", default=None, help="Filter by spec name")
-@click.option("--limit", default=None, type=int, help="Max number of runs to export")
-def export(output, spec_name, limit):
+@click.option(
+    "--spec",
+    "spec_name",
+    default=None,
+    help="Filter by spec name",
+)
+@click.option(
+    "--limit",
+    default=None,
+    type=int,
+    help="Max number of runs to export",
+)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Overwrite existing file without asking",
+)
+def export(
+    output: str,
+    spec_name: Optional[str],
+    limit: Optional[int],
+    force: bool,
+) -> None:
     """Export evaluation results to a CSV file."""
+    if os.path.exists(output) and not force:
+        click.echo(
+            f"File '{output}' already exists. Use --force to overwrite.",
+            err=True,
+        )
+        raise click.Abort()
+
     runs = list_runs(limit=limit, spec_name=spec_name)
     entries = runs.get("runs", [])
 
@@ -360,9 +434,19 @@ def export(output, spec_name, limit):
 
 
 @results.command()
-@click.option("--limit", default=20, type=int, help="Number of runs to show")
-@click.option("--spec", "spec_name", default=None, help="Filter by spec name")
-def history(limit, spec_name):
+@click.option(
+    "--limit",
+    default=20,
+    type=int,
+    help="Number of runs to show",
+)
+@click.option(
+    "--spec",
+    "spec_name",
+    default=None,
+    help="Filter by spec name",
+)
+def history(limit: int, spec_name: Optional[str]) -> None:
     """Show recent evaluation runs."""
     runs = list_runs(limit=limit, spec_name=spec_name)
     entries = runs.get("runs", [])
@@ -375,15 +459,17 @@ def history(limit, spec_name):
         ts = r.get("timestamp", "?")[:19]
         rate = r.get("pass_rate", 0) * 100
         click.echo(
-            f"  {r['run_id']}  {ts}  {r.get('spec_name', '?'):20s}  "
-            f"{rate:5.0f}%  ({r.get('passed', 0)}/{r.get('total', 0)})"
+            f"  {r['run_id']}  {ts}"
+            f"  {r.get('spec_name', '?'):20s}"
+            f"  {rate:5.0f}%"
+            f"  ({r.get('passed', 0)}/{r.get('total', 0)})"
         )
     click.echo()
 
 
 @results.command()
 @click.argument("run_id", type=str)
-def get(run_id):
+def get(run_id: str) -> None:
     """Show details of a specific evaluation run."""
     result = get_run(run_id)
     if "error" in result:
@@ -393,9 +479,14 @@ def get(run_id):
 
 
 @main.command()
-@click.argument("shell", type=click.Choice(["bash", "zsh", "fish"]), default="bash")
-def completion(shell):
-    """Print shell completion script. Source it to enable tab completion."""
+@click.argument(
+    "shell",
+    type=click.Choice(["bash", "zsh", "fish"]),
+    default="bash",
+)
+def completion(shell: str) -> None:
+    """Print shell completion script. Source it to enable tab
+    completion."""
     if shell == "bash":
         click.echo('eval "$(_AGENTSPEC_COMPLETE=bash_source agentspec)"')
     elif shell == "zsh":

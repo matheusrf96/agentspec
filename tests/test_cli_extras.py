@@ -98,7 +98,7 @@ class TestDirectorySpecs:
         with tempfile.TemporaryDirectory() as tmp:
             result = runner.invoke(main, ["run", tmp])
             assert result.exit_code != 0
-            assert "No .yaml files found" in result.output
+            assert "No .yaml/.yml files found" in result.output
 
     @patch("agentspec.cli.os.getenv")
     def test_single_file_still_works(

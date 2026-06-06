@@ -28,7 +28,12 @@ def sample_spec_dir():
                 {
                     "name": "test1",
                     "prompt": "hi",
-                    "assertions": [{"type": "output_contains", "value": "hello"}],
+                    "assertions": [
+                        {
+                            "type": "output_contains",
+                            "value": "hello",
+                        }
+                    ],
                 }
             ],
         }
@@ -60,20 +65,76 @@ class TestListSpecsCommand:
             assert result.exit_code == 0
             assert "No spec files found" in result.output
 
+    def test_list_specs_sorted(self, runner):
+        import yaml
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ["c.yaml", "a.yml", "b.yaml"]:
+                spec = {
+                    "name": name,
+                    "tests": [],
+                }
+                with open(os.path.join(tmp, name), "w") as f:
+                    yaml.dump(spec, f)
+            result = runner.invoke(main, ["list-specs", tmp])
+            assert result.exit_code == 0
+            lines = [
+                line.strip()
+                for line in result.output.strip().split("\n")
+                if line.strip()
+            ]
+            names = [line.split()[0] for line in lines]
+            assert names == sorted(names)
+
 
 class TestCompareCommand:
     def test_compare_missing_ids(self, runner):
-        result = runner.invoke(main, ["compare", "nonexistent1", "nonexistent2"])
+        result = runner.invoke(main, ["compare", "a" * 16, "b" * 16])
         assert result.exit_code != 0
-        assert "Error" in result.output or "error" in result.output.lower()
+        assert "Error" in result.output or ("error" in result.output.lower())
 
     def test_compare_help(self, runner):
         result = runner.invoke(main, ["compare", "--help"])
         assert result.exit_code == 0
 
     def test_compare_with_verbose(self, runner):
-        result = runner.invoke(main, ["compare", "id1", "id2", "--verbose"])
-        assert result.exit_code != 0  # IDs don't exist
+        result = runner.invoke(main, ["compare", "a" * 16, "b" * 16, "--verbose"])
+        assert result.exit_code != 0
+
+    @patch("agentspec.cli._compare_runs")
+    def test_compare_with_valid_runs(self, mock_compare, runner):
+        mock_compare.return_value = {
+            "run1": {
+                "run_id": "a" * 16,
+                "timestamp": "2024-01-01T00:00:00",
+            },
+            "run2": {
+                "run_id": "b" * 16,
+                "timestamp": "2024-01-02T00:00:00",
+            },
+            "differences": [
+                {
+                    "test_name": "test1",
+                    "status_before": "fail",
+                    "status_after": "pass",
+                }
+            ],
+            "summary1": {
+                "passed": 1,
+                "total": 2,
+                "pass_rate": 0.5,
+            },
+            "summary2": {
+                "passed": 2,
+                "total": 2,
+                "pass_rate": 1.0,
+            },
+        }
+        result = runner.invoke(main, ["compare", "a" * 16, "b" * 16])
+        assert result.exit_code == 0
+        assert "Comparison Results" in result.output
+        assert "test1" in result.output
+        assert "fail -> pass" in result.output
 
 
 class TestResultsCommand:
@@ -85,7 +146,7 @@ class TestResultsCommand:
     def test_results_export_help(self, runner):
         result = runner.invoke(main, ["results", "export", "--help"])
         assert result.exit_code == 0
-        assert "CSV" in result.output or "output" in result.output.lower()
+        assert "CSV" in result.output or ("output" in result.output.lower())
 
     def test_results_history_help(self, runner):
         result = runner.invoke(main, ["results", "history", "--help"])
@@ -99,7 +160,10 @@ class TestResultsCommand:
 class TestResultsPrune:
     @patch("agentspec.cli.prune_runs")
     def test_prune_default_keep(self, mock_prune, runner):
-        mock_prune.return_value = {"removed": 5, "remaining": 50}
+        mock_prune.return_value = {
+            "removed": 5,
+            "remaining": 50,
+        }
         result = runner.invoke(main, ["results", "prune"])
         assert result.exit_code == 0
         assert "5" in result.output
@@ -108,14 +172,20 @@ class TestResultsPrune:
 
     @patch("agentspec.cli.prune_runs")
     def test_prune_with_spec_filter(self, mock_prune, runner):
-        mock_prune.return_value = {"removed": 2, "remaining": 10}
+        mock_prune.return_value = {
+            "removed": 2,
+            "remaining": 10,
+        }
         result = runner.invoke(main, ["results", "prune", "--spec", "My Spec"])
         assert result.exit_code == 0
         mock_prune.assert_called_once_with(keep=50, spec_name="My Spec")
 
     @patch("agentspec.cli.prune_runs")
     def test_prune_custom_keep(self, mock_prune, runner):
-        mock_prune.return_value = {"removed": 0, "remaining": 100}
+        mock_prune.return_value = {
+            "removed": 0,
+            "remaining": 100,
+        }
         result = runner.invoke(main, ["results", "prune", "--keep", "100"])
         assert result.exit_code == 0
         mock_prune.assert_called_once_with(keep=100, spec_name=None)
@@ -139,27 +209,101 @@ class TestResultsExport:
                 }
             ]
         }
-        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode="w") as f:
-            outpath = f.name
-
-        result = runner.invoke(main, ["results", "export", outpath])
-        assert result.exit_code == 0
-        assert os.path.exists(outpath)
-        with open(outpath) as f:
-            content = f.read()
-        assert "run_id" in content
-        assert "abc123" in content
-        os.unlink(outpath)
+        with tempfile.TemporaryDirectory() as tmp:
+            outpath = os.path.join(tmp, "out.csv")
+            result = runner.invoke(main, ["results", "export", outpath])
+            assert result.exit_code == 0
+            assert os.path.exists(outpath)
+            with open(outpath) as f:
+                content = f.read()
+            assert "run_id" in content
+            assert "abc123" in content
 
     @patch("agentspec.cli.list_runs")
     def test_export_empty(self, mock_list_runs, runner):
         mock_list_runs.return_value = {"runs": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            outpath = os.path.join(tmp, "out.csv")
+            result = runner.invoke(main, ["results", "export", outpath])
+            assert result.exit_code == 0
+            assert "No runs" in result.output
+
+    @patch("agentspec.cli.list_runs")
+    def test_export_with_spec_filter(self, mock_list_runs, runner):
+        mock_list_runs.return_value = {"runs": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            outpath = os.path.join(tmp, "out.csv")
+            result = runner.invoke(
+                main,
+                [
+                    "results",
+                    "export",
+                    outpath,
+                    "--spec",
+                    "MySpec",
+                ],
+            )
+            assert result.exit_code == 0
+            mock_list_runs.assert_called_once_with(limit=None, spec_name="MySpec")
+
+    @patch("agentspec.cli.list_runs")
+    def test_export_with_limit(self, mock_list_runs, runner):
+        mock_list_runs.return_value = {"runs": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            outpath = os.path.join(tmp, "out.csv")
+            result = runner.invoke(
+                main,
+                [
+                    "results",
+                    "export",
+                    outpath,
+                    "--limit",
+                    "10",
+                ],
+            )
+            assert result.exit_code == 0
+            mock_list_runs.assert_called_once_with(limit=10, spec_name=None)
+
+    def test_export_overwrite_without_force(self, runner):
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode="w") as f:
+            f.write("existing")
             outpath = f.name
-        result = runner.invoke(main, ["results", "export", outpath])
-        assert result.exit_code == 0
-        assert "No runs" in result.output
-        os.unlink(outpath)
+        try:
+            result = runner.invoke(main, ["results", "export", outpath])
+            assert result.exit_code != 0
+            assert "already exists" in result.output
+        finally:
+            os.unlink(outpath)
+
+    @patch("agentspec.cli.list_runs")
+    def test_export_overwrite_with_force(self, mock_list_runs, runner):
+        mock_list_runs.return_value = {
+            "runs": [
+                {
+                    "run_id": "abc",
+                    "spec_name": "T",
+                    "spec_path": "",
+                    "timestamp": "",
+                    "pass_rate": 1.0,
+                    "total": 1,
+                    "passed": 1,
+                    "failed": 0,
+                    "errors": 0,
+                }
+            ]
+        }
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode="w") as f:
+            f.write("existing")
+            outpath = f.name
+        try:
+            result = runner.invoke(
+                main,
+                ["results", "export", outpath, "--force"],
+            )
+            assert result.exit_code == 0
+            assert "Exported" in result.output
+        finally:
+            os.unlink(outpath)
 
 
 class TestResultsHistory:
@@ -232,12 +376,18 @@ class TestCompletionCommand:
 
 
 class TestRunProgressFlag:
+    @patch("agentspec.cli.save_result")
     @patch("agentspec.cli.os.getenv")
     @patch("agentspec.cli.OpenAICompatibleAdapter")
     @patch("agentspec.cli.TestRunner")
     def test_run_with_no_progress(
-        self, mock_runner_cls, mock_adapter_cls, mock_getenv, runner
-    ):  # noqa: E501
+        self,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_getenv,
+        mock_save,
+        runner,
+    ):
         from unittest.mock import AsyncMock
 
         import yaml
@@ -265,9 +415,176 @@ class TestRunProgressFlag:
                     "tests": [],
                 },
                 f,
-            )  # noqa: E501
+            )
             path = f.name
 
         result = runner.invoke(main, ["run", path, "--no-progress"])
         assert result.exit_code == 0
         os.unlink(path)
+
+
+class TestAutoSave:
+    @patch("agentspec.cli.save_result")
+    @patch("agentspec.cli.os.getenv")
+    @patch("agentspec.cli.OpenAICompatibleAdapter")
+    @patch("agentspec.cli.TestRunner")
+    def test_auto_save_called_after_run(
+        self,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_getenv,
+        mock_save,
+        runner,
+    ):
+        from unittest.mock import AsyncMock
+
+        import yaml
+
+        mock_getenv.return_value = "sk-test-key"
+        mock_runner = mock_runner_cls.return_value
+        mock_runner.run_all = AsyncMock()
+        mock_report = mock_runner.run_all.return_value
+        mock_report.spec_name = "Test"
+        mock_report.summary.total = 0
+        mock_report.summary.passed = 0
+        mock_report.summary.failed = 0
+        mock_report.summary.errors = 0
+        mock_report.summary.pass_rate = 0.0
+        mock_report.avg_latency = 0.0
+        mock_report.total_tokens = 0
+        mock_report.results = []
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(
+                {
+                    "name": "Test",
+                    "model": "gpt-4",
+                    "system_prompt": "test",
+                    "tests": [],
+                },
+                f,
+            )
+            path = f.name
+
+        runner.invoke(main, ["run", path, "--no-progress"])
+        mock_save.assert_called_once()
+        os.unlink(path)
+
+    @patch("agentspec.cli.save_result")
+    @patch("agentspec.cli.os.getenv")
+    @patch("agentspec.cli.OpenAICompatibleAdapter")
+    @patch("agentspec.cli.TestRunner")
+    def test_auto_save_failure_verbose(
+        self,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_getenv,
+        mock_save,
+        runner,
+    ):
+        from unittest.mock import AsyncMock
+
+        import yaml
+
+        mock_getenv.return_value = "sk-test-key"
+        mock_runner = mock_runner_cls.return_value
+        mock_runner.run_all = AsyncMock()
+        mock_report = mock_runner.run_all.return_value
+        mock_report.spec_name = "Test"
+        mock_report.summary.total = 0
+        mock_report.summary.passed = 0
+        mock_report.summary.failed = 0
+        mock_report.summary.errors = 0
+        mock_report.summary.pass_rate = 0.0
+        mock_report.avg_latency = 0.0
+        mock_report.total_tokens = 0
+        mock_report.results = []
+
+        mock_save.side_effect = OSError("disk full")
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(
+                {
+                    "name": "Test",
+                    "model": "gpt-4",
+                    "system_prompt": "test",
+                    "tests": [],
+                },
+                f,
+            )
+            path = f.name
+
+        result = runner.invoke(main, ["run", path, "--no-progress", "-v"])
+        assert result.exit_code == 0
+        assert "auto-save failed" in result.output
+        os.unlink(path)
+
+
+class TestDirectoryModeResilience:
+    @patch("agentspec.cli.save_result")
+    @patch("agentspec.cli.os.getenv")
+    @patch("agentspec.cli.OpenAICompatibleAdapter")
+    @patch("agentspec.cli.TestRunner")
+    def test_continues_on_spec_failure(
+        self,
+        mock_runner_cls,
+        mock_adapter_cls,
+        mock_getenv,
+        mock_save,
+        runner,
+    ):
+        from unittest.mock import AsyncMock
+
+        import yaml
+
+        mock_getenv.return_value = "sk-test-key"
+
+        call_count = 0
+
+        async def side_effect(**kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ValueError("bad spec")
+            mock_report = type(
+                "R",
+                (),
+                {
+                    "spec_name": "Test2",
+                    "results": [],
+                    "summary": type(
+                        "S",
+                        (),
+                        {
+                            "total": 0,
+                            "passed": 0,
+                            "failed": 0,
+                            "errors": 0,
+                            "pass_rate": 0.0,
+                        },
+                    )(),
+                    "avg_latency": 0.0,
+                    "total_tokens": 0,
+                },
+            )()
+            return mock_report
+
+        mock_runner = mock_runner_cls.return_value
+        mock_runner.run_all = AsyncMock(side_effect=side_effect)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for name in ["bad.yaml", "good.yaml"]:
+                with open(os.path.join(tmp, name), "w") as f:
+                    yaml.dump(
+                        {
+                            "name": name,
+                            "model": "gpt-4",
+                            "system_prompt": "test",
+                            "tests": [],
+                        },
+                        f,
+                    )
+
+            result = runner.invoke(main, ["run", tmp, "--no-progress"])
+            assert result.exit_code == 0
+            assert "Error running bad.yaml" in result.output
