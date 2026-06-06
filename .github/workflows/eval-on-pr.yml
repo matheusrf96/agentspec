@@ -3,8 +3,8 @@ name: "AgentSpec Evaluation"
 on:
     pull_request:
         paths:
-            - "specs/**/*.yaml"
-            - "specs/**/*.yml"
+            - "examples/**/*.yaml"
+            - "examples/**/*.yml"
 
 jobs:
     evaluate:
@@ -15,7 +15,7 @@ jobs:
             - name: Run AgentSpec eval
               uses: ./.github/actions/eval-spec
               with:
-                  spec-path: "specs/"
+                  spec-path: "examples/tool-calling.yaml"
                   github-token: ${{ secrets.GITHUB_TOKEN }}
                   api-key: ${{ secrets.DEEPSEEK_API_KEY }}
                   model: "deepseek-v4-pro"

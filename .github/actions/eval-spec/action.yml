@@ -37,15 +37,10 @@ runs:
           with:
               python-version: "3.12"
 
-        - name: Install agentspec
+        - name: Install agentspec (local checkout)
           shell: bash
           run: |
-              VER="${{ inputs.version }}"
-              if [ -n "$VER" ]; then
-                pip install "agentspec==$VER"
-              else
-                pip install agentspec
-              fi
+              pip install -e ".[dev,langchain,anthropic]"
 
         - name: Run eval
           id: eval
