@@ -4,6 +4,11 @@ from agentspec.adapters.openai_compatible_adapter import (
     OpenAICompatibleAdapter,
 )
 from agentspec.assertions import AssertionResult, evaluate_assertion
+from agentspec.results_backend import (
+    JsonFileBackend,
+    ResultsBackend,
+    SqliteBackend,
+)
 from agentspec.runner import TestRunner
 from agentspec.scorer import Summary, TestCaseResult, TestReport
 from agentspec.spec import Assertion, AssertionType, Spec, TestCase
@@ -24,6 +29,9 @@ __all__ = [
     "AdapterConfig",
     "evaluate_assertion",
     "AssertionResult",
+    "ResultsBackend",
+    "JsonFileBackend",
+    "SqliteBackend",
 ]
 
 __version__ = "0.1.0"
