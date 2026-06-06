@@ -17,14 +17,18 @@ Spec
  ├── name: str
  ├── model: str
  ├── system_prompt: Optional[str]
+ ├── fixtures: Optional[Fixtures]
+ │     ├── conversation_history: list[ConversationEntry]
+ │     ├── mock_tools: list[MockTool]
+ │     └── canned_responses: list[CannedResponse]
  └── tests: list[TestCase]
        ├── name: str
        ├── prompt: str
        └── assertions: list[Assertion]
-             └── union type (6 variants)
+             └── union type (10 variants)
 ```
 
-Supports loading from files (`from_yaml()`) and strings (`from_yaml_string()`).
+Supports loading from files (`from_yaml()`) and strings (`from_yaml_string()`). Supports `!include` YAML tag for spec composition.
 
 ### Evaluation layer — `agentspec/assertions.py`
 
@@ -39,6 +43,10 @@ def evaluate_assertion(assertion, response) -> AssertionResult:
         case LatencyUnderAssertion(): ...
         case OutputJsonSchemaAssertion(): ...
         case OutputContainsAnyAssertion(): ...
+        case ToolCallCountAssertion(): ...
+        case OutputNotContainsAssertion(): ...
+        case CostUnderAssertion(): ...
+        case OutputLengthBetweenAssertion(): ...
 ```
 
 ### Orchestration layer — `agentspec/runner.py`
@@ -55,9 +63,11 @@ class TestRunner:
         return TestReport(...)
 ```
 
+Supports concurrent evaluation via `asyncio.gather()` with configurable concurrency limits.
+
 ### Reporting layer — `agentspec/scorer.py` + `agentspec/reporter.py`
 
-Scorer defines data models (`TestCaseResult`, `TestReport`, `Summary`). Reporter renders them as terminal output (rich tables) or JSON.
+Scorer defines data models (`TestCaseResult`, `TestReport`, `Summary`). Reporter renders them as terminal output (rich tables), JSON, or HTML.
 
 ### Adapter layer — `agentspec/adapters/`
 
@@ -66,9 +76,22 @@ Scorer defines data models (`TestCaseResult`, `TestReport`, `Summary`). Reporter
 | Adapter | Location |
 |---------|----------|
 | `OpenAICompatibleAdapter` | `agentspec/adapters/openai_compatible_adapter.py` |
+| `OllamaAdapter` | `agentspec/adapters/ollama_adapter.py` |
+| `AnthropicAdapter` | `agentspec/adapters/anthropic_adapter.py` |
+| `LangChainAdapter` | `agentspec/adapters/langchain_adapter.py` |
+| `CachingAdapter` | `agentspec/adapters/caching_adapter.py` |
 | `MockAdapter` | `agentspec/mcp/mock_agent.py` (via MCP) |
 
-## MCP server layer — `agentspec/mcp/`
+### Results backend — `agentspec/results_backend.py`
+
+Persists evaluation run results. Supports two backends:
+
+| Backend | Description |
+|---------|-------------|
+| `JsonFileBackend` | Saves runs as individual JSON files on disk |
+| `SqliteBackend` | Stores runs in a SQLite database |
+
+### MCP server layer — `agentspec/mcp/`
 
 All MCP servers share a common `BaseMcpServer` from `protocol.py` that handles JSON-RPC stdio framing, tool registration, and method dispatch. Each server registers tools via a decorator:
 

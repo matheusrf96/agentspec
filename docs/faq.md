@@ -24,7 +24,13 @@ Or use the mock-agent MCP server.
 
 ### Which LLM providers are supported?
 
-Any OpenAI-compatible API. DeepSeek, OpenAI, Together AI, Ollama (local), and others. Set the base URL with `LLM_BASE_URL` or `--base-url`.
+AgentSpec provides adapters for:
+- **OpenAI-compatible APIs** (DeepSeek, OpenAI, Together AI, etc.) — set base URL with `LLM_BASE_URL`
+- **Ollama** (local) — via `OllamaAdapter`
+- **Anthropic Claude** — via `AnthropicAdapter`
+- **LangChain agents** — via `LangChainAdapter`
+
+A `CachingAdapter` can wrap any adapter to cache LLM responses for deterministic re-runs.
 
 ## Specs
 
@@ -39,6 +45,23 @@ Or use the `spec-templates` MCP server for pre-built templates.
 ### Can I reuse specs across different agents?
 
 Yes. The spec format is agent-agnostic. Change the `model` field or use `--model` at runtime.
+
+### What are fixtures?
+
+Specs can include a `fixtures` section with pre-seeded conversation history, mock tool definitions, and canned responses. This enables deterministic testing without a live LLM.
+
+### Can I compose specs from multiple files?
+
+Yes. Use the `!include` YAML tag to import tests from other files:
+
+```yaml
+tests:
+  - !include shared-tests.yaml
+```
+
+### How are evaluation results stored?
+
+Results can be persisted to either JSON files (`JsonFileBackend`) or SQLite (`SqliteBackend`). The default backend saves to `~/.agentspec/results/`. Use `agentspec results history` and related commands to query past runs.
 
 ### What assertion types are available?
 

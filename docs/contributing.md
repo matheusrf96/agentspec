@@ -23,11 +23,19 @@ Edit files under `agentspec/` for the main package, `tests/` for tests, and `doc
 
 ```bash
 ruff check .
+ruff format --check .
+flake8 agentspec/ tests/
 ```
 
-We use ruff with rules E, F, W, I. Line length is 100 characters.
+We use ruff with rules E, F, W, I and flake8. Line length is 88 characters.
 
-### 3. Test
+### 3. Type check
+
+```bash
+pyright agentspec/ tests/
+```
+
+### 4. Test
 
 ```bash
 # Run all tests
@@ -40,14 +48,14 @@ python -m pytest tests/ --cov=agentspec
 python -m pytest tests/test_spec.py -v
 ```
 
-### 4. Check coverage
+### 5. Check coverage
 
-Target coverage is 80%+. Run `python -m pytest tests/ --cov=agentspec` to check.
+Target coverage is 95%+. Run `python -m pytest tests/ --cov=agentspec --cov-fail-under=95` to verify.
 
 ## Code conventions
 
 - **Python 3.10+** with strict typing — all functions must have type annotations
-- **Line length**: 100 characters
+- **Line length**: 88 characters
 - **Imports**: stdlib → third-party → local (ruff handles sorting)
 - **Async**: Use `async def` for adapter methods and MCP handlers. Mark async tests with `@pytest.mark.asyncio`
 - **Testing**: Use `pytest` with `pytest-asyncio`. Prefer `unittest.mock` over monkeypatching. Use `CliRunner` for CLI tests
@@ -67,12 +75,15 @@ Target coverage is 80%+. Run `python -m pytest tests/ --cov=agentspec` to check.
 2. Register tools with the `@srv.tool()` decorator
 3. Create `tests/mcp/test_<name>.py` with tests for each tool
 4. Register the server in `.mcp.json`
-5. Verify with `ruff check` and `pytest`
+5. Verify with `ruff check`, `flake8`, `pyright`, and `pytest`
 
 ## PR checklist
 
 - [ ] Code lints with `ruff check .`
+- [ ] Formatting passes with `ruff format --check .`
+- [ ] Type checks with `pyright agentspec/ tests/`
 - [ ] All tests pass with `python -m pytest tests/ -v`
+- [ ] Coverage is 95%+ with `python -m pytest tests/ --cov=agentspec --cov-fail-under=95`
 - [ ] New code has tests covering happy path, validation errors, and edge cases
 - [ ] Type annotations are complete
 - [ ] Documentation updated if public API changed
