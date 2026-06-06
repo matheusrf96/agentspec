@@ -241,6 +241,34 @@ def add_assertion(spec_path: str, test_name: str, type: str, **kwargs) -> dict:
             elif type == "output_json_schema":
                 if "schema" in kwargs:
                     assertion["schema"] = kwargs["schema"]
+            elif type == "tool_call_count":
+                if "exact" in kwargs:
+                    assertion["exact"] = kwargs["exact"]
+                if "min_count" in kwargs:
+                    assertion["min_count"] = kwargs["min_count"]
+                if "max_count" in kwargs:
+                    assertion["max_count"] = kwargs["max_count"]
+            elif type == "output_not_contains":
+                if "value" in kwargs:
+                    assertion["value"] = kwargs["value"]
+                if "case_sensitive" in kwargs:
+                    assertion["case_sensitive"] = kwargs["case_sensitive"]
+            elif type == "cost_under":
+                if "max_cost" in kwargs:
+                    assertion["max_cost"] = kwargs["max_cost"]
+                if "input_price_per_token" in kwargs:
+                    assertion["input_price_per_token"] = kwargs["input_price_per_token"]
+                if "output_price_per_token" in kwargs:
+                    assertion["output_price_per_token"] = kwargs[
+                        "output_price_per_token"
+                    ]
+            elif type == "output_length_between":
+                if "min_length" in kwargs:
+                    assertion["min_length"] = kwargs["min_length"]
+                if "max_length" in kwargs:
+                    assertion["max_length"] = kwargs["max_length"]
+                if "unit" in kwargs:
+                    assertion["unit"] = kwargs["unit"]
             test.setdefault("assertions", []).append(assertion)
             _write_spec_raw(spec_path, data)
             return {"ok": True, "assertion_index": len(test["assertions"]) - 1}
