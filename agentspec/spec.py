@@ -140,10 +140,11 @@ class Spec(BaseModel):
 
     @classmethod
     def _include_constructor(cls, loader: yaml.SafeLoader, node: yaml.Node) -> list:
-        path = str(loader.construct_scalar(node))
+        path = str(loader.construct_scalar(node))  # type: ignore[arg-type]
+        stream = loader.stream
         base = (
-            Path(loader.stream.name).parent
-            if hasattr(loader.stream, "name")
+            Path(stream.name).parent  # type: ignore[attr-defined]
+            if stream is not None and hasattr(stream, "name")
             else Path.cwd()
         )  # noqa: E501
         resolved = (base / path).resolve()

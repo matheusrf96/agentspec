@@ -36,11 +36,7 @@ class AnthropicAdapter(AgentAdapter):
         model: str | None = None,
         fixtures: dict | None = None,
     ) -> AgentResponse:
-        kwargs: dict = {}
-
-        if system_prompt:
-            kwargs["system"] = system_prompt
-
+        system = system_prompt
         messages: list[dict] = []
 
         if fixtures:
@@ -63,17 +59,20 @@ class AnthropicAdapter(AgentAdapter):
 
         model_name = model or self.config.model
         api_tools = self._build_tools(fixtures)
+
+        create_kwargs: dict = {
+            "model": model_name,
+            "max_tokens": self.config.max_tokens,
+            "temperature": self.config.temperature,
+            "messages": messages,  # type: ignore[arg-type]
+        }
+        if system:
+            create_kwargs["system"] = system
         if api_tools:
-            kwargs["tools"] = api_tools
+            create_kwargs["tools"] = api_tools  # type: ignore[arg-type]
 
         start = time.monotonic()
-        response = await self.client.messages.create(
-            model=model_name,
-            max_tokens=self.config.max_tokens,
-            temperature=self.config.temperature,
-            messages=messages,
-            **kwargs,
-        )
+        response = await self.client.messages.create(**create_kwargs)
         elapsed = time.monotonic() - start
 
         text = ""
@@ -106,7 +105,9 @@ class AnthropicAdapter(AgentAdapter):
             token_usage=token_usage,
         )
 
-    def _build_tools(self, fixtures: dict | None = None) -> list[dict]:
+    def _build_tools(  # type: ignore[return]
+        self, fixtures: dict | None = None
+    ) -> list[dict]:
         tools = []
         if fixtures:
             for mt in fixtures.get("mock_tools", []):
